@@ -1,0 +1,24 @@
+Container On Off efficency = 5
+RoundTripEffiency = 85
+
+Tanks:
+Number Of Tanks = 10
+Volume = 1000 
+SOC = 20
+
+Section 1: 
+
+Number of Containers: 10
+
+Section 2: 
+Number of Containers: 2
+
+
+Section 3: 
+Number of Containers: 1
+
+
+Section 4: 
+Number of Containers: 5
+
+END
