@@ -30,24 +30,35 @@ class Main:
         self.RTE = system.getRTE()#gets RTE
         self.fullEmpty = system.getFullEmpty()#gets the FULLEMPTY checher
         self.data.read("Generated.csv","loadResampled.csv") #Reads data 
+    
         generatedSurplus = self.data.getGeneratedSurplus()
         # every element will be five minute intervals
         for element in generatedSurplus:
             self.backlog.put(element)
         
-      
+
 
         self.energyManagement = energyHandler(self.RTE,self.cells) # handles the storage and the management of the energy
         self.clock = clock(self.step,self.cells,self.tanks,self.energyManagement) # clcok for each five minute step
         
         
-        self.energyManagement.energyManagement(-40,self.tanks,self.fullEmpty)
-        bestCombination = self.energyManagement.findCombination(self.tanks,200)
-        if(bestCombination != None):
-            containers = self.energyManagement.optimalContainersTwo(50,self.cells,bestCombination,0)
-            
-        for container in containers:
-            print(container.sName,container.cName)
+        #self.energyManagement.energyManagement(-40,self.tanks,self.fullEmpty)
+
+        print
+        self.energyManagement.storeEnergy(30,self.tanks,self.cells[0].containers,self.fullEmpty)
+
+        '''
+    
+            bestCombination = self.energyManagement.findCombination(self.tanks,200)
+            if(bestCombination != None):
+                containers = self.energyManagement.optimalContainersTwo(50,self.cells,bestCombination,0)
+                
+            for container in containers:
+                print(container.sName,container.cName,container.charge)
+            bestContainers = self.energyManagement.bestCombinationContainers(containers,4)
+        '''
+
+        
         """
         for energy in generatedSurplus:
             self.clock.update(self.tanks,self.cells,self.fullEmpty)# move five minutes

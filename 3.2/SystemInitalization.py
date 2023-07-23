@@ -27,7 +27,7 @@ class systemInitalization():
             # Now we are going to create the number of containers for each section 
             # we are going to first get the number of containers for this section by calling a function called getContainers
             numberOfContainers = self.getCount("Number of Containers:", sectionName, nextSection) 
-            self.cells.append(Section(sectionName, numberOfContainers, self.getCriticalInfo("Container On Off efficency"),self.getCriticalInfo("charge"),self.tanks))
+            self.cells.append(Section(sectionName, numberOfContainers, self.getCriticalInfo("Container On Off efficency"),self.tanks))
 
         #now we want to go and get the number of containers in each section
          #this is getting the number of containers in a section

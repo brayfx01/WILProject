@@ -2,6 +2,7 @@
 from RoundTripEfficency import roundTripEffiency as RTE
 from FullEmpty import FullEmpty
 from queue import Queue
+from itertools import combinations
 class energyHandler:
     def __init__(self,RTE,cells):
         self.RTE = RTE
@@ -41,54 +42,78 @@ class energyHandler:
                     self.backlog.put(energy) # put the remaining energy in a backlog
                     return
                 # get the optimal tank
-                tank = self.optimalTank(tanks,1)# in this case we are getting the most charged tank
-                containers = self.optimalContainers(energy,self.cells,1)# giving energy
+                tank = self.findCombination(tanks,1)# in this case we are getting the most charged tank
+                # if there are no combinatinos that work  use them all
+                if tank == None:
+                    tank = tanks
+                # getting the containers from the cells
+                containers = []
+                for section in self.cells:
+                    for container in section.containers:
+                        containers.append(container) 
+                          
+                bestCombinationContainers = self.bestCombinationContainers(energy,containers)# giving energy
+                if bestCombinationContainers == None:
+                    bestCombinationContainers = containers
                 # now turning on the containers
                 for container in containers:
                     container.onOffStatus = True
                 energy = self.storeEnergy(energy,tank,containers)
         # now after going through once we see what containres are still on and drain the battery
         self.drain(containers,tanks)
-   
-    def storeEnergy(self,energy,tank,containers):
-        #we are currently only doing the positive energy 
-        if(energy >= 0):
-  
-            # now we are getting the total charge of the capaicty
-            totalCharge = 0 
-            for container in containers:
-                totalCharge = totalCharge + container.charge
-            #now we are going to do one cycle of charging which does take 5 miutes
-            # check if the charge breaks the max capacity of the tank
-            if(self.RTE.RTE(totalCharge) > tank.remainingCapacity()): # we are seeing if we charge the energy with container does it go over capacity
-                energy = energy - (abs(tank.remainingCapacity()- self.RTE.RTE(totalCharge))) # this is the remaining energy
-                tank.soc = 1 # fully charge tank
-                return energy
-            # now if there is more space in the tank then requried to be charged 
-            elif(self.RTE.RTE(totalCharge) <= tank.remainingCapacity()):
-                # now the state of charge of the tank wll be the Round Trip Effieincy applied to the charge ability of the containers 
-                soc = (tank.currentChargedCapacity() + self.RTE.RTE(totalCharge))/tank.volume
-                tank.soc = soc
-                energy = energy - totalCharge # update the remaining energy
-                if (energy < 0):
-                        energy = 0
-                return energy
-        if(energy < 0): 
-            #getting total expenditure 
-            totalExpenditure = 0
-            for container in containers:
-                totalExpenditure = container.charge + totalExpenditure
-            #if there is enough energy stored 
-            if(totalExpenditure <= self.RTE.RTE(tank.currentChargedCapacity())):
-                soc = (self.RTE.RTE(tank.currentChargedCapacity())- abs(totalExpenditure))/tank.volume
-                tank.soc = soc
-                energy = 0 # all will have been stored
-                return energy
-            elif(totalExpenditure > self.RTE.RTE(tank.currentChargedCapacity())):
-                # we need to get the remaining capacity left in the tank
-                energy = energy + tank.currentChargedCapacity() # we are getting the new energy
-                tank.soc =0 
-                return energy
+        
+    def storeEnergy(self,energy,tanks,containers, fullEmptyCheck):
+        if energy > 0: # this is the positive case of energy 
+            # get the best combination of containers to charge the energy 
+            bestContainersCombination = self.bestCombinationContainers(containers,energy)
+            # if no combination => energy use them all any ways
+            if bestContainersCombination == None :
+                bestContainersCombination = containers
+            # now getting an individual tank
+            for tank in tanks:
+                if(energy == 0):
+                    print("Stored successfully")
+                    break
+                if(fullEmptyCheck.checkIfAllFull() == True): # all tanks are full
+                    print("All Tanks are full")
+                    break
+                # this will drain
+                if(self.containerRemaingCharge(bestContainersCombination,0)== True):# if all contianers have no remainig charge for the 5 minuets
+                    print("Finish the cycel")
+                    print("Finish up store by adding the drain for the cycle")
+                    break
+                # can we store all of energy in this tank
+                if(tank.remainingCapacity() >= self.RTE.RTE(energy)): # this tank can fully store the energy
+                    #getting one container from bestContianer
+                    for container in bestContainersCombination:
+                        #if it can charge in one cycle then charge
+                        if(container.remainingCharge >= energy):
+                            #set this tank to full
+                             # this tank is full
+                            tank.Charge(self.RTE.RTE(energy))
+                            container.onOffStatus = True # turn on the tank
+                            container.remainingCharge = container.remainingCharge - energy # get the difference of these two 
+                            energy = 0
+                        if(container.remainingCharge < energy): # we need to use multiple cycles
+                            # charge the tank by the container charge
+                            tank.Charge(self.RTE.RTE(container.charge))
+                            #Turn on the tank
+                            container.onOffStatus = True
+                            container.remainingCharge = 0 # we charge as much as we could in this step with this container
+                            energy = energy - container.charge
+                elif(tank.remainingCapacity() < self.RTE.RTE(energy)): # this tank does not have enough storage
+                    storeable = energy - tank.remainingCapacity() # how much can we store
+                    for container in bestContainersCombination:
+                        if(container.remainingCharge >= energy ): # this container can fully charge in one cycle
+                            energy = energy - tank.remainingCapacity() # this is the remaining Energy
+                            tank.soc =1 # this tank is full
+                            container.onOffStatus = True # turn on the contianer
+                            container.remainingCharge = container.remainingCharge - storeable # how much can this container charge in this instance
+                           
+                            
+                            
+                        
+
     def drain(self,containers,tanks):
         # this currently cannot deal with no tanks meeting drain requirmentes
         containerOnCount = 0
@@ -105,6 +130,7 @@ class energyHandler:
         # tanks 
         # then put them through the bestCombination to get the best combination of these tanks
         containers = []
+        duplicateFound = False
         for section in cells:
             for container in section.containers:
                 for tank in container.correspondingTanks:
@@ -116,76 +142,21 @@ class energyHandler:
                                 containers.append(container)
                             else: # now checking for duplicates
                                 for containerTwo in containers:
+                                   # print("beggining of loop", containerTwo.sName,containerTwo.cName)
                                     if (container.sName == containerTwo.sName and container.cName == containerTwo.cName): # this means we found a duplicate
-                                        continue
-                                    else:
-                                        containers.append(container)
+                                        duplicateFound = True
+                                        break
+                                #check if a duplicate has been found if not add to containers 
+                                # else reset duplicate to false
+                                if(duplicateFound == False):
+                                    containers.append(container)
+                                else:
+                                    duplicateFound = False 
+                            
+
        
         return containers
-    def optimalContainers(self,energy,cells,action):
-        #for now we are going to work on the positive condition 
-        #if energy is positive then we will need to charge the system 
-        # so we want to get the highest possible charge of the containers that match or add up to the 
-        # required energy 
-        found = False
-        containers = []
-        if(action == 0): # this means we need to charge the energy
-            cycle = 0 # this will track the first or second action
-            while found == False:
-                for section in cells:# geting the sections
-                    for container in section.containers: # getting the containsers within each section
-                        #now there are going to be two things that happen here 
-                        # if there is a container that matches the charge requrimenets then use it 
-                        # unless we need to use multiple differeing containers
-                        if (cycle == 0):
-                            if(container.charge == energy):# we have found a continaer with optimal parameters so end the loop and pass it 
-                                found == True
-                                print("We have found a container")
-                                containers.append(container)
-                                return containers
-                        if(cycle == 1): 
-                            # this means there are no containers that meet the requirements so we want to start adding
-                            # containers charge to meet requriemnts
-                            containers.append(container)
-                            if(self.containerSum(containers) >= energy): # we have enough containers to meet demands
-                                return containers
-                if(cycle == 0):# we completed first loop and did not find optimal container
-                    cycle = 1
-                elif(cycle == 1): # we conpleted second loop and did not find a combination of optimal containres 
-                    # so we have to return what we have
-                    cycle == 0
-                    return containers
-        if(action == 1): # expending energy into the system
-            for section in cells:
-                for container in section.containers:
-                        #we found container with optimal parameters
-                        if(container.charge == abs(energy)):
-                            return 
-            for section in cells:
-                for container in section.containers:
-                    containers.append(container)
-                    if(self.containerSum(containers) >= abs(energy)):
-                        return containers
-            return containers
-
-    def optimalTank(self,tanks, action):
-        optimalTank = None 
-        for i in range(len(tanks)):
-            if(i == 0): # by default just choose the first tank as best 
-                optimalTank = tanks[i]
-                continue
-                 # as they all have the same capacity we can find wich has the lowest current SOC
-            if(action == 0): # we are storing energy
-                if(tanks[i].currentChargedCapacity() < optimalTank.currentChargedCapacity()):
-                        optimalTank = tanks[i]
-            elif(action == 1): # we are taking energy
-                self.checkTanksStatus.checkIfAllEmpty()
-                if(tanks[i].currentChargedCapacity() > optimalTank.currentChargedCapacity()):
-                    optimalTank = tanks[i]
-  
-        return optimalTank
-    
-        
+   
     def findCombination(self,tanks, energy):
         length = len(tanks)
 
@@ -220,20 +191,66 @@ class energyHandler:
         findCombinationRecursion(0, [], 0)
 
         return best_combination
+    def bestCombinationContainers(self,containers, energy):
+        length = len(containers)
 
-    def optimalTanks(self,energy,tanks,action):
-        optimalTank = []
-        # first we are going to check if there are any 
-        # tanks that fit the energy properly
-        
-        for i in range(len(tanks)):
-            if(tanks[i].currentCHargedCapacity() == energy):# we have found a tank that can be used to store all the energy
-                optimalTank.append(tanks[i])# append this tank and return optimal tank
-                return optimalTank
-        # now we are going to check for combinations of tanks to meet the energy requirements
-        self.bestCombination(tanks,energy)        
+        # Helper function to find all combinations recursively
+        def findCombinationRecursion(index, currentCombination, currentTotalRemainingCapacity):
+            nonlocal best_combination, best_total_volume
+
+            if currentTotalRemainingCapacity >= energy:
+                if best_combination is None or (currentTotalRemainingCapacity < best_total_volume and currentTotalRemainingCapacity >= energy):
+                    best_combination = currentCombination
+                    best_total_volume = currentTotalRemainingCapacity
+                return
+
+            if index >= length:
+                return
+
+            # Include the current object in the combination
+            current_object = containers[index]
+            findCombinationRecursion(index + 1, currentCombination + [current_object], currentTotalRemainingCapacity + current_object.charge)
+
+            # Exclude the current object from the combination
+            findCombinationRecursion(index + 1, currentCombination, currentTotalRemainingCapacity)
+
+        # Sort objects in descending order based on volume
+        containers.sort(key=lambda obj: obj.charge, reverse=True)
+
+        # Initialize the best combination and total volume
+        best_combination = None
+        best_total_volume = float('inf')
+
+        # Start the recursive search
+        findCombinationRecursion(0, [], 0)
+
+        return best_combination
+          
     def containerSum(self,containers):
         sum = 0
         for container in containers:
             sum = container.charge + sum
         return sum
+    def containerRemaingCharge(self,containers,action):
+        full = False
+        empty = False
+        if(action == 0): # checking if full
+            # going through all contianers to see if they are able to continue charging this cycle
+            for container in containers:
+                if container.remainingCharge == 0: # cannot charge more this step
+                    continue
+                if(container.remainingCharge != 0):
+                    full = True
+                    return full
+            full = False 
+            return full
+        elif action == 1: # if we need to tak
+            for container in containers:
+                if container.remainingCharge != 0:
+                    continue
+                else:
+                    return True
+            return False
+
+                
+                

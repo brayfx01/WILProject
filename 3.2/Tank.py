@@ -12,4 +12,7 @@ class Tank:
     def remainingCapacity(self):
         remainingCapacity = self.volume - self.currentChargedCapacity()
         return remainingCapacity 
-
+    # charges the tank based on the amount given
+    def Charge(self,amount):
+        self.chargedCapacity = self.chargedCapacity + amount
+        self.soc = self.chargedCapacity/self.volume * 100 
