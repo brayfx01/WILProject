@@ -8,11 +8,9 @@ class FullEmpty:
                 if(tank.soc == 1): #this tank is full so skip 
                     continue
                 elif(tank.soc != 1): # this tank is not full so
-                    self.allFull == False 
-                    return(self.allFull)
-        
-            self.allFull = True # if we make it here then all tanks are full
-            return self.allFull
+                    return False
+
+            return True # they are all full
         def checkIfAllEmpty(self):
             for tank in self.tanks:
                 if(tank.soc == 0): #this tank is full so skip 

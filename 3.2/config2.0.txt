@@ -1,32 +1,26 @@
 Container On Off efficency = 60 kw/h
-Round Trip Effiency = 1
+Round Trip Effiency = 100
 
 Tanks:
-Number Of Tanks = 3
-Volume = 20
-SOC = 90
+Number Of Tanks = 2
+Volume = 10
+SOC = 50
 
 Section 1: 
 
 Number of Containers: 2
 
 Container 1: 
-charge = 10 kw/h
-Corresponding Tanks: 3
+charge = 5 kw/m
+Corresponding Tanks: 1
 
-Container 2: 
-charge = 10 kw/h
-Corresponding Tanks: 2
+Container 2:
+charge = 5 kw/m
+Corresponding Tanks: 1
 
-Section 2:
 
-Number of Containers: 2
 
-Container 1: 
-charge =  1 kw/h
-Corresponding Tanks: 2
 
-Container 2: 
-charge = 1 kw/h
-Corresponding Tanks: 2
+
+
 END

@@ -4,9 +4,9 @@ class Tank:
         self.tName = tName
         self.volume = volume
         self.soc = (soc/100)  #makes this a percentage
+        self.chargedCapacity = self.volume * self.soc
     #how much of the battery is charged
     def currentChargedCapacity(self):
-        self.chargedCapacity = self.volume *(self.soc)
         return self.chargedCapacity
     # how much is not chraged
     def remainingCapacity(self):
@@ -16,3 +16,8 @@ class Tank:
     def Charge(self,amount):
         self.chargedCapacity = self.chargedCapacity + amount
         self.soc = self.chargedCapacity/self.volume * 100 
+
+    def drain(self,amount):
+        self.chargedCapacity = self.chargedCapacity - abs(amount)
+        self.soc = self.chargedCapacity/self.volume # update soc
+  

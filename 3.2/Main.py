@@ -42,10 +42,10 @@ class Main:
         self.clock = clock(self.step,self.cells,self.tanks,self.energyManagement) # clcok for each five minute step
         
         
-        #self.energyManagement.energyManagement(-40,self.tanks,self.fullEmpty)
-
-        print
-        self.energyManagement.storeEnergy(30,self.tanks,self.cells[0].containers,self.fullEmpty)
+        self.energyManagement.energyManagement(10,self.tanks,self.fullEmpty)
+        " now going to see how positive will work with multiple iterations so set containers lower than nessessary"
+        
+        #self.energyManagement.storeEnergy(30,self.tanks,self.cells[0].containers,self.fullEmpty)
 
         '''
     
