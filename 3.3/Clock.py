@@ -16,16 +16,8 @@ class clock:
         self.sections = sections
         self.tanks = tanks
         self.energyHandler = energyHandler
-    def update(self,tanks,sections,fullEmpty):
-        # we are going through and checking which containers are on 
-
-        containerONCount = 0
-        for section in sections: 
-            for container in section.containers:
-                if(container.onOffStatus == True):
-                    containerONCount = containerONCount + 1
-        # this will essentailly get how many containers are running and using energy this cycle and 
-        #subtract from their usage
-        drain = -containerONCount * sections[0].containers[0].onOffEfficency * self.step
-        self.energyHandler.energyManagement(drain,tanks,fullEmpty)
+    def update(self):
+        # update time
         self.time = self.time + self.step
+    def getTime(self):
+        return self.time
