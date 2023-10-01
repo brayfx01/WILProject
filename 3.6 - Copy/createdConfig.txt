@@ -1,0 +1,15 @@
+Tanks:
+    Tank 1
+        Volume = 
+        SOC 
+    Tank 2
+        Volume = 
+        SOC 
+    Tank 3
+        Volume = 
+        SOC 
+    Tank 4
+        Volume = 
+        SOC 
+Containers:
+END
