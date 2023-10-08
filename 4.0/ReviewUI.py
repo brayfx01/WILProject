@@ -28,20 +28,23 @@ class Review:
         
 
         # Function to open the text file in a text editor
-    def open_text_editor(self,fileName):
+    def open_text_editor(self,fileName,textWidget):
         try:
-            subprocess.Popen(["notepad.exe", fileName])  # Opens the file in Notepad (Windows)
+           process = subprocess.Popen(["notepad.exe", fileName])  # Opens the file in Notepad (Windows)
+           process.wait()
         except FileNotFoundError:
             print("Text editor not found or file does not exist.")
-
+      
+        self.update_text_widget(fileName, textWidget)
    
     # Function to open the CSV file in a CSV editor (e.g., Microsoft Excel)
     def open_csv_editor(self,fileName):
         
         try:
             # Open the CSV file with the default associated application
-            subprocess.Popen([fileName], shell=True)
-            print(f"{fileName} opened successfully with the default application.")
+            process = subprocess.Popen([fileName], shell=True)
+            process.wait()
+            
         except FileNotFoundError:
             print(f"File not found: {fileName}")
         except Exception as e:
@@ -87,16 +90,17 @@ class Review:
         file_path = filedialog.askopenfilename(filetypes=[("Text Files", "*.txt")])
 
         self.textFile = file_path
-    def ChangeCsv(self,textFileName):
+        self.update_text_widget(self.textFile, textWidget)
+    def ChangeCsv(self,textFileName, csvWidget):
         file_path = filedialog.askopenfilename(filetypes=[("CSV Files", "*.csv")])
         if file_path:
             file_name = os.path.basename(file_path)
             #set the dataset name to this
             self.csvName = file_name
             #textFileName.config(text=f"File Name: {file_name}") 
-        print(file_path == self.textFile)
-        print(os.path.basename(file_path), self.csvFile)
+   
         self.csvFile = os.path.basename(file_path) 
+        self.update_csv_widget(self.csvName, csvWidget)
     # close all the windows
     def finish(self):
         
@@ -260,7 +264,8 @@ class Review:
        
         # these are the buttons  
         changeButtonForConfig = ttk.Button(button_frame_text, text="Change" ,command = lambda: self.ChangeConfig(text_widget))
-        editButtonForConfig = ttk.Button(button_frame_text, text="Edit", command = lambda: self.open_text_editor(self.textFile))
+        editButtonForConfig = ttk.Button(button_frame_text, text="Edit", command = lambda: self.open_text_editor(self.textFile,text_widget))
+        print("HERE")
         saveButtonForConfig = ttk.Button(button_frame_text, text="Save", command = lambda: self.save(self.textFile, text_widget,0))
 
         changeButtonForConfig.grid(row=0, column=0, padx=5, pady=5)
@@ -275,7 +280,7 @@ class Review:
         loadButtonFrame = tk.Frame(loadFrame)
         loadButtonFrame.grid(row = 3, column=0, sticky= "sw")
         
-        changeButtonForCsv = ttk.Button(button_frame_csv, text="Change", command = lambda: self.ChangeCsv(self.genFile))
+        changeButtonForCsv = ttk.Button(button_frame_csv, text="Change", command = lambda: self.ChangeCsv(self.genFile,csv_widget))
         editButtonForCsv = ttk.Button(button_frame_csv, text="Edit",  command = lambda: self.open_csv_editor(self.genFile))
         saveButtonForCsv = ttk.Button(button_frame_csv, text="Save", command = lambda: self.save(self.genFile,csv_widget,1))
         

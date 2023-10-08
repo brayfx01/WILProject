@@ -36,23 +36,28 @@ class InitialUI:
    
     def checkEmpty(self,textWidget,generatedWidget,loadWidget,importFrame):
         empty = False
+        self.errorState = False
         # just do this once
         if(self.textErrorMessage== None):
             self.textErrorMessage = tk.Label(self.textFrame,text ="Cannot Leave Text File empty")
             self.genErrorMessage = tk.Label(self.generatedDataFrame,text ="Cannot Leave Generated File empty")
             self.loadErrorMessage = tk.Label(self.loadDataFrame,text ="Cannot leave Load File empty")
-                
+        
         if(textWidget.get("1.0","end-1c") == ""):# dispaly a red boarder around the widget
           
             textWidget.config(highlightbackground = "red")
            
             # get rid of and replace the error text with same one
-            self.textErrorMessage.grid_remove()
+            self.textErrorMessage.config(text = "File Name Cannot Be Empty")
             self.textErrorMessage.grid(row = 1, column= 1)
-            
-           
             empty = True
             
+            self.errorState = True
+        elif(os.path.exists(textWidget.get("1.0","end-1c"))== False):
+            textWidget.config(highlightbackground = "red")
+             
+            self.textErrorMessage.configure(text = "ERROR: FILE NOT FOUND")
+            self.textErrorMessage.grid(row = 1, column= 1)
             self.errorState = True
         else:# otherwise set it back to normal and get rid of the error message
             textWidget.config(highlightbackground = "light grey")
@@ -65,10 +70,15 @@ class InitialUI:
             
             generatedWidget.config(highlightbackground = "red")
            
-
+            self.genErrorMessage.config(text = "File Name Cannot Be Empty")
             self.genErrorMessage.grid(row = 1, column= 1)
-            empty = True
-            
+          
+            self.errorState = True
+        elif(os.path.exists(generatedWidget.get("1.0","end-1c"))== False):
+            generatedWidget.config(highlightbackground = "red")
+             
+            self.genErrorMessage.configure(text = "ERROR: FILE NOT FOUND")
+            self.genErrorMessage.grid(row = 1, column= 1)
             self.errorState = True
         else:
             generatedWidget.config(highlightbackground = "light grey")
@@ -79,26 +89,29 @@ class InitialUI:
             
             loadWidget.config(highlightbackground = "red")
             
-           
+            self.loadErrorMessage.config(text = "File Name Cannot Be Empty")
+            
             self.loadErrorMessage.grid(row = 1, column= 1)
             empty = True
             
+            self.errorState = True
+        elif(os.path.exists(loadWidget.get("1.0","end-1c"))== False):
+            loadWidget.config(highlightbackground = "red")
+             
+            self.loadErrorMessage.configure(text = "ERROR: FILE NOT FOUND")
+            self.loadErrorMessage.grid(row = 1, column= 1)
             self.errorState = True
         else:
             loadWidget.config(highlightbackground = "light grey")
             self.loadErrorMessage.grid_remove()
             
-       
-        if(empty == False):
-         
-            
-            self.errorState = False
-        return empty
-        
+      
+        return self.errorState
+
     def importPressed(self, textWidget,generatedWidget,loadWidget,importingFrame):
         
         # check if any of the inputs were left empty
-        if self.checkEmpty(textWidget,generatedWidget,loadWidget, importingFrame) == False:
+        if self.checkEmpty(textWidget,generatedWidget,loadWidget, importingFrame) == False :
             # textWiget.get() just getting the inputs of the widgets and passing them into the next window
             ReviewUi = Review("Review",textWidget.get("1.0", "end-1c"),generatedWidget.get("1.0", "end-1c"),loadWidget.get("1.0", "end-1c"),self.windowsArray,self.window)
             ReviewUi.createWindow()
