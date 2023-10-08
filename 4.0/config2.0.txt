@@ -1,0 +1,35 @@
+Container On Off efficency = 100 kw/h
+Round Trip Effiency = 100
+
+Tank Max Volume = 300
+Tank Min Volume = 50
+
+Tank Max SOC = 50
+Tank Min SOC = 0
+
+Container Max Charge = 200
+Container Min Charge = 100
+Tanks:
+    Tank 1:
+        Volume = 100
+        SOC = 9
+    Tank 2:
+	    Volume = 100
+	    SOC = 9
+
+Containers: # just added this in check with main system
+    Section 1: 
+
+    Number of Containers: 1
+
+        Container 1: 
+        charge = 100  kw/m
+        Corresponding Tanks: 1
+END
+
+
+
+
+
+
+
