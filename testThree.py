@@ -1,30 +1,36 @@
-import tkinter as tk
+import numpy as np
+import matplotlib.pyplot as plt
 
-# Create a list to store references to all the windows
-windows = []
+# Sample data
+data = [
+    ("nameOne", 10,0),
+    ("nameOne", 20,0),
+    ("nameTwo", 15,0),
+    ("nameTwo", 0,0),
+    ("nameTwo", 25,0),
+    ("nameThree", 5,0),
+    ("nameThree", 15,0),
+]
 
-# Function to create a new window
-def create_window():
-    new_window = tk.Toplevel(root)
-    windows.append(new_window)
-    label = tk.Label(new_window, text="This is a new window")
-    label.pack()
+# Separate the data by names
+name_data = {}
+for name, value,nothing in data:
+    if name in name_data:
+        print(name)
+        name_data[name].append(value)
+    else:
+        name_data[name] = [value]
+print(name_data)
+# Create a figure and axis
+fig, ax = plt.subplots()
 
-# Function to close all windows
-def close_all_windows():
-    for window in windows:
-        window.destroy()
-    windows.clear()
+# Plot each individual name's values on the same graph
+for name, values in name_data.items():
+    plt.plot(range(len(values)), values, marker='o', label=name)
 
-# Create the main application window
-root = tk.Tk()
-root.title("Main Window")
+plt.title("Values for Different Names")
+plt.xlabel("Entry")
+plt.ylabel("Value")
+ax.legend()
 
-# Create buttons to create new windows and close all windows
-create_button = tk.Button(root, text="Create New Window", command=create_window)
-create_button.pack()
-
-close_button = tk.Button(root, text="Close All Windows", command=close_all_windows)
-close_button.pack()
-
-root.mainloop()
+plt.show()

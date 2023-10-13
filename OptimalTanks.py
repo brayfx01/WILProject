@@ -14,8 +14,11 @@ class OptimalTanks():
         self.energy = 0
         self.tankArray = []
         self.fullOrEmpty = FullEmpty(self.tankArray)
-        
-        
+        # used to capture when a tank has expereinced change and what time it did
+        self.currentTime = 0
+        # will be used for getting the current Tank data for graphing
+        self.tankChangeRecord = []
+ 
         # bassically the amount of positive energy we need to store to ensure 
         # the next day will go smoothly
         self.targetStorage = target
@@ -25,8 +28,8 @@ class OptimalTanks():
         self.met = False
         
     def optimalTanks(self):
-       
-        # used to determine the tame of the tank
+        dummy = 0
+        # used to determine the Name of the tank
         tankCount = 0
         # this is needed as for the positive energy we 
         # want to know if we can fully store it all 
@@ -51,19 +54,17 @@ class OptimalTanks():
             # we do not need to do it 
             if totalStorage >= self.target:
                 self.met = True
-                print(energy)
+
+               
        
         
-           # print("ENERGY START", energy)
-
            
             # set the this energy to abs of energy for ease of calculation
             # we also applied round trip effiecny 
             self.energy = energy/(self.RTE.efficency/100)
           
-            # if negative again then we see if one tank can still 
-            #be charged enough to satisfy
-         
+
+             # this basically go thorugh and sees if a tank can satisfies the energy requirements
             if(len(self.tankArray )) >= 1:
                 
                 # creating a temp array with temp objects
@@ -71,6 +72,7 @@ class OptimalTanks():
                     for tank in self.tankArray:
                         #this is done so that temp array does not affect self.tanksArray
                         temporaryTankArray.append(Tank(tank.tName,tank.volume,tank.soc))
+                        self.currentTime += 5
                 for tank in temporaryTankArray:
                     #negatives
                    
@@ -83,7 +85,7 @@ class OptimalTanks():
                         # this tank has some charge left
                         if(tank.remainingCapacity() > 0):
                             
-                            # if the tan can charge all of energy
+                            # if the tank can meet energy demands
                             if(tank.remainingCapacity() >= abs(energy)):
                  
                                 # keep reduicng our target if this is less or equal to 0 then 
@@ -92,12 +94,16 @@ class OptimalTanks():
                                 
                                 tank.Charge(abs(energy))
                                 self.energy = 0
-                     
+                                
+                                # recording changes 
+                                self.tankChangeRecord.append([tank.currentChargeCapacity(), tank.soc, self.currentTime])
+                                self.currentTime += 5
                                 break
-                            else:# we cannot so we need to add anouther tank in here for positve
-                                print(self.targetStorage, "BEFORE")
+                            else:# Tank cannot meet energy demands 
+                                # we need to add more
+                             
                                 self.targetStorage = self.targetStorage - tank.remainingCapacity()
-                                print(self.targetStorage, "AFTER")
+                            
                                 energy = energy - tank.remainingCapacity()
                                 # set the charged Capacity of this tank to 100 or fully charged
                                 tank.soc = 100
@@ -109,36 +115,37 @@ class OptimalTanks():
                                 self.tankArray.append(newTank)
                                 
                                 temporaryTankArray.append(Tank(newTank.tName,self.maxVolume,self.minSoc))
-                                # also subtract this
+                              
                                 self.targetStorage = self.targetStorage - newTank.remainingCapacity()
+                                
+                                # recording changes 
+                                self.tankChangeRecord.append([tank.currentChargeCapacity(), tank.soc, self.currentTime])
                                 continue
                         else:# if this tank is empty pass it
                             continue
                  
                     elif self.energy < 0:
-        
-                         # can we charge the tank any more 
-                         # if not then we need to add anouther tank
-                            # we do not need to do anything but draing temporary tank
-                       
+
+                        # we can handle the energy with this tank
                         if(tank.currentChargedCapacity() >= abs(self.energy)):
                             tank.drain(abs( self.energy))
+                          
                             self.energy = 0
+                             # recording changes 
+                                                            # recording changes 
+                            self.tankChangeRecord.append([tank.currentChargedCapacity(), tank.soc, self.currentTime])
+                            self.currentTime += 5
                             break
-                        # we do not have enough stored so drain what we can and charge the offcial one with what is left
+                        # this tank cannot fully hanle energy requirements so use what it has
                         elif(tank.currentChargedCapacity() > 0 and tank.currentChargedCapacity() < abs(energy)):
                             self.energy =  self.energy + tank.currentChargedCapacity()
                             
                             for initialTank in self.tankArray:
                                 if(initialTank.tName == tank.tName):
                                     initialTank.Charge(abs( self.energy))
-                            self.energy = 0 # we have charged the energy
-                            
-                            
-                            
-                        # alther this to work with the initial tanks instead of temporary tanks
-                        # as we need to know if we have any remaining capacity to charge
-                       
+                            #self.energy = 0 # we have charged the energy
+             
+
                         else:# if this tank is empty pass it
                             continue
                 # this is only for checking if the initial tanks 
@@ -157,32 +164,31 @@ class OptimalTanks():
                             # we do not do anything to the temp tanks as we would just drain what we charged
                             if tank.remainingCapacity() >= abs(self.energy):
                                 tank.Charge(abs(self.energy))
-                                self.energy = 0 
+                                self.energy = 0
+                
                             else:
                                 self.energy = self.energy +  tank.remainingCapacity()
                                 # set this tank to full
                                 tank.soc = 100
                                 tank.chargedCapacity = self.maxVolume
                             
-                                
+                                # recording changes 
+                                self.tankChangeRecord.append([tank.currentChargedCapacity(), tank.soc, self.currentTime])
+                         
          
-            
+            # if energy is 0 the move on 
             if  self.energy == 0:
                 continue
             
             # energy is negative
             if( self.energy < 0):
               
-                # make this positive
+                # make this positive for ease of calculation
                 self.energy = abs(self.energy)
                 while self.energy != 0:
                     
-                    # if energy > max Tank charge
-                    # then we need to add a tank with the maximum charge
-               
-                    # if energy is greater than the maximum charge of the tank
-                            
-                    
+                   
+                    # energy greater than the maxVlume of the tank
                     if(self.energy > self.maxVolume * (self.maxSoc)/100):
 
                         self.energy = abs(self.energy)- (self.maxVolume * self.maxSoc)/100
@@ -200,8 +206,7 @@ class OptimalTanks():
                         # however it will be 0 in charge as it is supposed to be drained
                         temporaryTankArray.append(Tank(tankName, self.maxVolume,0))
                         
-                        
-                        
+                       
                     # this means we do not need a fully charged tank
                     # so we want to find what ratio it is 
                     # then if this ratio falls between the two minSoc and Max Soc
@@ -225,9 +230,10 @@ class OptimalTanks():
                             self.tankArray.append(tank)
                             
                             temporaryTankArray.append(Tank(tank.tName, self.maxVolume,0))
-                            # add a tank with the ratio as the new SOC
-                        # bassically the energy that we need is inbetween max and min
-                     
+                            # recording this change 
+                            self.tankChangeRecord.append([self.maxVolume, 0,self.currentTime])
+                           
+                         
                         elif(self.energy < self.maxVolume *self.maxSoc and self.energy >= self.maxVolume * self.minSoc):
                             
                             
@@ -246,11 +252,10 @@ class OptimalTanks():
 
                             self.energy = 0
                        
-                                
-                       
-                       
-                            # add a tank that is the least filled possible
-                        # we add a tank with the minimum state of charge
+                            # recording this 
+                            self.tankChangeRecord.append([self.maxVolume, 0, self.currentTime])
+                            self.currentTime += 5
+                            
                         elif(self.energy < self.maxVolume *self.minSoc):
                             
                             tankCount = tankCount +1
@@ -263,10 +268,13 @@ class OptimalTanks():
                             temporaryTankArray.append(Tank(tankName, self.maxVolume,0))
                             
                             self.energy = 0
-                    
+                            self.tankChangeRecord.append([self.maxVolume, 0, self.currentTime])
+                            self.currentTime += 5
+              
             elif(energy > 0 and self.met == False):
                
                 if(energy == 0):
+                   
                     # go to the next energy 
                     continue
                 
@@ -281,6 +289,8 @@ class OptimalTanks():
                         for tank in self.tankArray:
                             #this is done so that temp array does not affect self.tanksArray
                             temporaryTankArray.append(Tank(tank.tName,tank.volume,tank.soc))
+                            self.currentTime +=5
+                            self.tankChangeRecord.append([tank.currentChargedCapacity(), tank.soc,self.currentTime])
                  
                 
                     
@@ -292,6 +302,8 @@ class OptimalTanks():
                         # if we have met our target there is no need to keep adding tanks 
                         # to store more energy
                         if(self.targetStorage <= 0):
+                            self.tankChangeRecord.append([tank.currentChargedCapacity(), tank.soc,self.currentTime])
+                            self.currentTime += 5
                             break
                         if(self.fullOrEmpty.checkIfAllFull(temporaryTankArray)== False):
                             
@@ -309,10 +321,14 @@ class OptimalTanks():
                                     # target is the total negative energy of the day that we need to store 
                                     # to ensure that we will be fine for tomorrow
                                     self.targetStorage = self.targetStorage - self.energy
-                                    tank.Charge(self.energy)
+                                    tank.Charge(abs(self.energy))
                                    
 
                                     self.energy = 0
+                                    # appending the current charge of the tank and its soc
+                                    self.tankChangeRecord.append([tank.currentCharnge, tank.soc,self.currentTime])
+                                    self.currentTime += 5
+                           
                                     
                                     break
                                     
@@ -323,7 +339,9 @@ class OptimalTanks():
                                     tank.Charge(tank.remainingCapacity())
                                     self.energy = self.energy - remaining
 
-                                         
+                                    
+                                    self.tankChangeRecord.append([tank.currentCharnge, tank.soc,self.currentTime])
+                                    
                         else: # we are going to add in multiple tanks
                             # add a tank with the lowest possible charge
                             
@@ -333,27 +351,13 @@ class OptimalTanks():
                             # add this tank to the array
                             self.tankArray.append(tank)
                             temporaryTankArray.append(Tank(tank.tName,tank.volume,tank.soc))
+                            self.tankChangeRecord.append([tank.currentChargedCapacity(), tank.soc,self.currentTime])
+            elif(energy > 0 and self.met == True):
+                self.tankChangeRecord.append([tank.currentChargedCapacity(), tank.soc,self.currentTime])
+                self.currentTime +=5
+        for tank in self.tankArray:
+            if tank.currentChargedCapacity() < 0:
+                print("this one")
+                quit()
+        return self.tankArray, self.tankChangeRecord
 
-  
-        return tankCount,self.tankArray
-
-# mCharge, minCharge, MaxSOC, MINSOC, energy  
-""" 
-energyArray =[-100,100]
-tankArray = []
-
-# maxVolume,minVoluem,maxSOC,minSOC,energyArray
-
-optimal = OptimalTanks(1000,50,90,10,energyArray)
-result,tankArray = optimal.optimalTanks()
-
-for tank in tankArray:
-    print(tank.tName)
-    print(" ", tank.volume)
-    print("     ", tank.soc, "this is soc")
-    print("         ", tank.currentChargedCapacity())
-quit()
-print("NOW IF ALL ARE FULL WE ADD IN MORE TANKS")
-
-print(result)
-"""

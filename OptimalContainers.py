@@ -16,6 +16,10 @@ class OptimalContainers():
         self.empty = False
         self.drainLeftToMatch = False
         self.totalDrain = drain
+        # used to record the changes of the contaiers over time
+        self.currentTime = 0
+        # container charge, time
+        self.containerChangeData = []
         
     def duplicateTank(self, container, tank):
         for cTank in container.correspondingTanks:
@@ -24,12 +28,7 @@ class OptimalContainers():
                 return True
         # no duplicates
         return False
-    # this will use the current containers and go through to see if it meets the
-    # energy requirements when it goes thorugh outher tanks
 
-    # essentially we have a tank and want to see if this tank can store the enrgy if there is any left
-    # and we have a container that can still charge or drain
-    
     
     # we need to set the contaiers remaining charge to 0 here 
     # then set it back to normal later on when needed 
@@ -51,22 +50,33 @@ class OptimalContainers():
                             # now we can reduce everything
                             # note we do not reduce containers charge as it will be set back to full imeediately after
                             if(drain == True):
+                                if(tank.currentChargedCapacity() < 0):
+                                    count = 0
+                                    for t in self.tankArray:
+                                        if(tank.currentChargedCapacity() < 0):
+                                            count += 1
+                                    #print("num of neg", count)    
+                                    #quit()
+                            
                                 tank.drain(self.energy)
+                             
                       
                             elif(charge == True):
                                 # we drain by the containers total charge
                                 self.totalDrain = self.totalDrain - con.remainingCharge
                                 tank.Charge(self.energy)
 
+                            
+                            # recording this change to the container
+                            self.containerChangeData.append([con.remainingCharge - self.energy, self.currentTime])
+                            self.currentTime += 5
+                            
                             self.energy = 0
-                            # put a duplication protection in here
-                           
+                            
+                            #duplication protection
                             if(self.duplicateTank(con, tank) == False):
                                 con.correspondingTanks.append(tank)
                         
-                            # in this case we will need to know what happes to the remaining charg e
-                            # of the container
-                          
 
                         elif(tankCapacity <= abs(self.energy)):
                            
@@ -98,7 +108,7 @@ class OptimalContainers():
 
                         if(drain == True):
                             tank.drain(con.remainingCharge)
-
+                          
                         elif(charge == True):
                             
                             tank.Charge(con.remainingCharge)
@@ -107,6 +117,7 @@ class OptimalContainers():
                         if(self.duplicateTank(con, tank) == False):
                             con.correspondingTanks.append(tank)
                         con.remainingCharge = 0    
+                        self.containerChangeData.append([con.remainingCharge, self.currentTime])
                         
                     elif(tankCapacity < abs(self.energy)):
                         # if our tank can hold all of the our containers remainingCharge
@@ -118,7 +129,7 @@ class OptimalContainers():
                             # charge or drain
                             if(drain == True):
                                 tank.drain(con.remainingCharge)
-
+                           
                             elif(charge == True):
                                 self.totalDrain = self.totalDrain - con.remainingCharge
                                 tank.Charge(con.remainingCharge)
@@ -128,6 +139,7 @@ class OptimalContainers():
                                 con.correspondingTanks.append(tank)
                             # set the remaining CHarge of this container to 0
                             con.remainingCharge = 0
+                            self.containerChangeData.append([con.remainingCharge, self.currentTime])
                         # tank is least
                         elif(tankCapacity <= currentContainer.charge):
                             if(tankCapacity <= currentContainer.charge):
@@ -137,6 +149,7 @@ class OptimalContainers():
                                 if(drain == True):
                                     # tank is empty
                                     tank.drain(tankCapacity)
+                                  
                                 elif(charge == True):
                                     # tank is full
                                     self.totalDrain = self.totalDrain - tankCapacity
@@ -149,7 +162,11 @@ class OptimalContainers():
                                 tankCapacity = 0
 
     def optimalContainers(self):
-        element = 0
+        tempTankArray = []
+        # creating an popu.ating a temporary tank array so the original doe not become edited
+        for tank in self.tankArray:
+            tempTankArray.append(Tank(tank.tName,tank.volume,tank.soc))
+
         # if this is = maxContianersPerSection we increment currentSEction by 1
         # and set this back to 0
         maxContainers = 0
@@ -192,14 +209,8 @@ class OptimalContainers():
                 # and coneect containers to them
                 # we will keep connecting one container untill charge of container 0
               
-                for tank in self.tankArray:
-                    if(tank.tName == "Tank: 14"):
-                        print(tank.tName)
-                        print(self.energy)
-                        print(num)
-                        print(len(self.energyArray))
-                       
-                    
+                for tank in tempTankArray:
+                   
                     if(self.energy == 0):
                         break
                     # this is going to get wether we need to
@@ -242,14 +253,23 @@ class OptimalContainers():
                     # this gets the remaining energy after fully using a container to charge or drain
                     
                     #   currentContainer, containerArray, tankCapacity, drain , charge
-                    
-                    #print("SELF ENERGY", self.energy, tank.tName)
 
                     if(len(containerArray) >= 1):
-                       
+                        """
+                        it is occuring after this somewhere
+                        """
+                     
+                        for t in self.tankArray:
+                            count = 0
+                            if t.currentChargedCapacity() < 0:
+                                print("HERE")
+                                for t in self.tankArray:
+                                    count += 1
+                                print(count)
+                                #quit()
                         self.remainingEnergy(
                             cont, containerArray, tankCapacity, tank, drain, charge)
-                      
+                     
                         # go to next energy
                         # if energy 0 or this tank is empty or full
                         if(self.energy == 0 or self.empty == True):
@@ -258,15 +278,13 @@ class OptimalContainers():
                       
                        
                   
-                    print("SELF ENERGY after", self.energy)
-                    # put this into its own function
-                    
+
+                
                     # this is determining if we need more containers
                     # gets the remaining energy
                     # if negative then we want currentChargedCapacity()
                     
                     if(self.energy <= 0):
-                        print("IN HERE////////////// what we want to do is drain the current container ")
                         tankCapacity = tank.currentChargedCapacity()
                         # if the tank capacity is 0 then we have no charge so go to next tank
                         if(tankCapacity == 0):
@@ -280,11 +298,11 @@ class OptimalContainers():
                         if(tankCapacity == 0):
                             continue
                         charge = True
-                    print("AFTER") 
                     if(self.energy == 0):
                         # reset all the containers remaing
                         for cont in containerArray:
                             cont.remainingCharge = cont.charge
+                            self.containerChangeData.append([cont.remainingCharge, self.currentTime])
                         break
                     elif(drain == True and tank.currentChargedCapacity() == 0):
                        
@@ -293,8 +311,7 @@ class OptimalContainers():
                     elif(charge == True and tank.remainingCapacity() == 0):
                        
                         continue
-                    print("HERE")
-                    
+
                     if len(containerArray) >= 1:
                         
                         print(tankCapacity)
@@ -323,7 +340,10 @@ class OptimalContainers():
                                     cont = container("Section: " + str(currentSection + 1), "Container: " + str(
                                         maxContainers), 85, abs(self.energy), [])
                                     containerArray.append(cont)
-                                
+                                    
+                                    self.containerChangeData.append([self.energy,self.currentTime ])
+                                    self.currentTIme += 5
+                                    
                                     if(self.duplicateTank(cont, tank) == False):
 
                                         # append this tank tot he corresponding tanks to the container
@@ -335,14 +355,17 @@ class OptimalContainers():
                                         self.totalDrain = self.totalDrain - self.energy
                                         tank.Charge(self.energy)
                                     elif(drain == True):
+                                      
                                         tank.drain(self.energy)
+                                 
+                                      
                                     
                                    
                                     # set energy to 0
                                     self.energy = 0
                         
 
-                                else:
+                                else: # charge by energy
 
                                     # append this new tank to the container
                                     if(self.duplicateTank(cont, tank) == False):
@@ -357,8 +380,12 @@ class OptimalContainers():
                                     charge = False
                                 elif(drain == True):
                                     tank.drain(self.energy)
+                                 
                                     drain = False
-
+                                    
+                                self.containerChangeData.append(cont.remainingCharge - self.energy, self.currentTime)
+                                self.currentTime += 5
+                                
                                 self.energy = 0
                             # it is strictly less than maxCharge
                             elif(self.maxCharge >= abs(self.energy)):
@@ -374,6 +401,8 @@ class OptimalContainers():
                                     cont = container("Section: " + str(currentSection + 1), "Container: " + str(
                                         maxContainers), 85, self.maxCharge, [])
                                     containerArray.append(cont)
+                                    self.containerChangeData.append([self.maxCharge, self.currentTime])
+                                    self.currentTime += 5
                                 
                                     if(self.duplicateTank(cont, tank) == False):
 
@@ -387,15 +416,13 @@ class OptimalContainers():
                                         tank.Charge(self.energy)
                                     elif(drain == True):
                                         tank.drain(self.energy)
+                                      
+
                                     
                                    
                                     # set energy to 0
                                     self.energy = 0
-                                    print(self.duplicateTank(cont, tank) == False)
-                                    print(element)
-                                    print(tank.currentChargedCapacity())
-                                    print(self.energy)
-                                    
+                               
 
                                 else:
 
@@ -412,8 +439,11 @@ class OptimalContainers():
                                     charge = False
                                 elif(drain == True):
                                     tank.drain(self.energy)
+                            
                                     drain = False
-
+                                    
+                                self.containerChangeData.append([cont.remainingCharge - self.energy, self.currentTime])
+                                self.currentTime += 5
                                 self.energy = 0
                             # next is if our max charge is less than the energy
                             elif(self.maxCharge <= abs(self.energy)):
@@ -430,7 +460,8 @@ class OptimalContainers():
                                 # add a container with max chareg
                                 cont = container("Section: " + str(currentSection + 1), "Container: " + str(
                                     maxContainers), 85, self.maxCharge, [])
-
+                                self.containerChangeData.append([self.maxCharge, self.currentTime])
+                          
                                 containerArray.append(cont)
                                 # now we reduce energy by the max charge of the container
 
@@ -440,7 +471,7 @@ class OptimalContainers():
                                     tank.Charge(self.maxCharge)
                                 elif(drain == True):
                                     tank.drain(self.maxCharge)
-
+                            
                                 if(self.duplicateTank(cont, tank) == False):
                                     cont.correspondingTanks.append(tank)
 
@@ -470,6 +501,9 @@ class OptimalContainers():
                             if(multipleConnections == False):
                                 cont = container("Section: " + str(currentSection + 1), "Container: " + str(
                                     maxContainers), 85, abs(self.energy), tanks)
+                                
+                                self.containerChangeData.append([self.energy, self.currentTime])
+                                self.currentTime += 5
                             # if we need to use anouther tank to store and draing for energy
                             # then we use this equation
                             containerArray.append(cont)
@@ -477,11 +511,14 @@ class OptimalContainers():
                                 self.energy = abs(self.energy) - tankCapacity
                                 # the remaining Charge of this Container
                                 cont.remainingCharge = cont.remainingCharge - tankCapacity
+                                self.containerChangeData.append([cont.remainingCharge, self.currentTime])
+                             
                             # other wise reduce the enrgy by the containers max charge
                             elif(tankCapacity >= self.maxCharge):
                                 self.energy = abs(self.energy) - self.maxCharge
                                 # the remaining Charge of this Container
                                 cont.remainingCharge = 0
+                                self.containerChangeData.append([self.energy, self.currentTime])
                             # append this tnak to the container
                             cont.correspondingTanks.append(tank)
                             # this means we can use this container to charge anouther tank
@@ -500,6 +537,7 @@ class OptimalContainers():
                                 # add a container with max chareg
                                 cont = container("Section: " + str(currentSection + 1), "Container: " + str(
                                     maxContainers), 85, self.maxCharge, tanks)
+                                self.containerChangeData.append([self.maxCharge, self.currentTime])
                                 # add this tank to the connection for the container
                                 if(self.duplicateTank(cont, tank) == False):
                                     cont.correspondingTanks.append(tank)
@@ -514,6 +552,7 @@ class OptimalContainers():
                                     self.energy = abs(
                                         self.energy) - tankCapacity
                                     cont.remainingCharge = cont.remainingCharge - tankCapacity
+                                    self.containerChangeData.append([cont.remainingCharge, self.currentTime])
                                     tankCapacity = 0
                                     # empty
                                     if(drain == True):
@@ -527,6 +566,7 @@ class OptimalContainers():
                                     self.energy = abs(
                                         self.energy) - self.maxCharge
                                     cont.remainingCharge = 0
+                                    self.containerChangeData.append([cont.remainingCharge, self.currentTime])
                                     if(drain == True):
                                         tank.drain(self.maxCharge)
                                     elif(charge == True):
@@ -536,4 +576,4 @@ class OptimalContainers():
                                 # this being false means we need to use anouther container
                                 # to fulfill the energy requirements
                                 multipleConnections = False
-        return containerArray
+        return containerArray, self.containerChangeData

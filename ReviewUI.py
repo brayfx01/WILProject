@@ -1,17 +1,22 @@
 import tkinter as tk
 from tkinter import filedialog
+from tkinter import ttk
 import os
 import tkinter as tk
 import csv
 import subprocess
 class Review:
-    def __init__(self, windowName, textFile, csvFile,rootWindow,windowsArray):
+    def __init__(self, windowName, textFile, genFile,loadFile,windowsArray,initialUi):
+        self.initialWindow = initialUi
+
+   
         self.windowsArray = windowsArray
         self.window = tk.Toplevel()
 
         self.window.title("REVIEW")
         self.textFile = textFile
-        self.csvFile = csvFile
+        self.genFile = genFile
+        self.loadFile = loadFile
         # size of the window
         self.windowWidth = 300
         self.windowHeight = 300 
@@ -25,20 +30,23 @@ class Review:
         
 
         # Function to open the text file in a text editor
-    def open_text_editor(self,fileName):
+    def open_text_editor(self,fileName,textWidget):
         try:
-            subprocess.Popen(["notepad.exe", fileName])  # Opens the file in Notepad (Windows)
+           process = subprocess.Popen(["notepad.exe", fileName])  # Opens the file in Notepad (Windows)
+           process.wait()
         except FileNotFoundError:
             print("Text editor not found or file does not exist.")
-
+      
+        self.update_text_widget(fileName, textWidget)
    
     # Function to open the CSV file in a CSV editor (e.g., Microsoft Excel)
     def open_csv_editor(self,fileName):
         
         try:
             # Open the CSV file with the default associated application
-            subprocess.Popen([fileName], shell=True)
-            print(f"{fileName} opened successfully with the default application.")
+            process = subprocess.Popen([fileName], shell=True)
+            process.wait()
+            
         except FileNotFoundError:
             print(f"File not found: {fileName}")
         except Exception as e:
@@ -54,7 +62,7 @@ class Review:
                     text_widget.config(state=tk.NORMAL)
                     text_widget.delete("1.0", tk.END)
                     text_widget.insert(tk.END, new_text_data)
-                    text_widget.config(state=tk.DISABLED)
+                    text_widget.config(state=tk.NORMAL)
         except FileNotFoundError:
             pass
     # Function to periodically check for changes in the CSV file and update the widget
@@ -66,7 +74,7 @@ class Review:
                     csv_widget.config(state=tk.NORMAL)
                     csv_widget.delete("1.0", tk.END)
                     csv_widget.insert(tk.END, new_csv_data)
-                    csv_widget.config(state=tk.DISABLED)
+                 
         except FileNotFoundError:
             pass
         except PermissionError as e:
@@ -84,26 +92,55 @@ class Review:
         file_path = filedialog.askopenfilename(filetypes=[("Text Files", "*.txt")])
 
         self.textFile = file_path
-    def ChangeCsv(self,textFileName):
+        self.update_text_widget(self.textFile, textWidget)
+    def ChangeCsv(self,textFileName, csvWidget):
         file_path = filedialog.askopenfilename(filetypes=[("CSV Files", "*.csv")])
         if file_path:
             file_name = os.path.basename(file_path)
             #set the dataset name to this
             self.csvName = file_name
             #textFileName.config(text=f"File Name: {file_name}") 
-        print(file_path == self.textFile)
-        print(os.path.basename(file_path), self.csvFile)
+   
         self.csvFile = os.path.basename(file_path) 
+        self.update_csv_widget(self.csvName, csvWidget)
     # close all the windows
     def finish(self):
-        for window in self.windowsArray:
-            window.destroy()
+        
+        self.initialWindow.setConfigFile(self.textFile)
+        self.initialWindow.setGenFile(self.genFile)
+        self.initialWindow.setLoadFile(self.loadFile)
+        # stop the main loop of the window
+        self.initialWindow.window.quit()
+        # stop the main loop of the window
+
+        
+        
             
     def getConfigFile(self):
         return self.textFile
     def CloseWindow(self):
         self.window.destroy()
+    def save(self,fileName,widget,operation):
+        print("Saved")
+
+        # saving a text File
+        if(operation == 0):
+            # getting the location where to save
+            #file_path = filedialog.asksaveasfilename(defaultextension=".txt", filetypes=[("Text files", "*.txt")])
+            if fileName:
+                with open(fileName, 'w') as file:
+                    file.write(widget.get("1.0", "end"))
+                    
+        #csv File Save Gen and Load 
+        elif(operation == 1):
+            if fileName:
+                with open(fileName, 'w', newline= "") as file:
+                    file.write(widget.get("1.0", "end-1c"))
+
+            
+        
     def createWindow(self):
+
         frame_width = 400  # Adjust as needed
         frame_height = 300  # Adjust as needed
         
@@ -120,76 +157,125 @@ class Review:
         # Increase the minimum height of the empty row (row 2)
         self.window.grid_rowconfigure(1, weight=1, minsize=20)  # Set the minimum height to 20 (adjust as needed)
 
+        titleFrame = tk.Frame(self.window,highlightbackground="grey")
+        titleFrame.grid(row=0 , columnspan= 4, sticky="nsew", pady = 1)
 
-
+        title = tk.Label(titleFrame, text = "File Review")
+        title.pack(fill= "both", expand = True)
         # Create a frame for the text file content
-        text_frame = tk.Frame(self.window)
-        text_frame.grid(row=0 , column=0, sticky="nsew")
+        text_frame = tk.Frame(self.window,highlightbackground="grey", highlightthickness=1)
+        text_frame.grid(row=1 , column=0, sticky="nsew")
         text_frame.config(width=frame_width, height=frame_height)
         
-        # Create a Text widget for displaying the text file content (read-only)
-        text_widget = tk.Text(text_frame, wrap=tk.NONE, state=tk.DISABLED)
+        headerName = "Configruation File: " + self.textFile
+        textheaderLabel = tk.Label(text_frame,text = headerName)
+        textheaderLabel.grid(row = 1 , column=0, sticky="nsew", columnspan=5,rowspan=1, padx=5)
+   
+        # Create a Text widget for displaying the text file content
+        text_widget = tk.Text(text_frame, wrap=tk.NONE, width= 50, height=20)
         self.textWidget = text_widget
-        text_widget.grid(row= 0, column=0, sticky="nsew")  # Use grid for the widget
+        text_widget.grid(row= 2, column=0)  # Use grid for the widget
 
         # Create a Scrollbar widget for the text widget
         text_scrollbar = tk.Scrollbar(text_frame, command=text_widget.yview, orient=tk.VERTICAL)
-        text_scrollbar.grid(row=0, column=1, sticky="ns")  # Position it to the right
+        text_scrollbar.grid(row=2, column=1, sticky="ns")  # Position it to the right
     
         # Configure the Text widget to use the scrollbar
         text_widget.config(yscrollcommand=text_scrollbar.set)
-
+    
         # Load text data and display it in the Text widget
         text_file = self.textFile
-        csv_file = self.csvFile
+        genFile = self.genFile
+        loadFile = self.loadFile
         
+        # essentially putting he text file in the textWidget
         try:
             with open(text_file, "r") as f:
                 text_data = f.read()
                 text_widget.config(state=tk.NORMAL)
                 text_widget.insert(tk.END, text_data)
-                text_widget.config(state=tk.DISABLED)
+                text_widget.config(state = tk.NORMAL)
         except FileNotFoundError:
-            text_widget.insert(tk.END, "Error: Text file not found.")
-  
+            text_widget.insert(tk.END, f"Error: Text file {self.textFile} not found.")
+
+        
+        emptyFrame = tk.Frame(self.window, width= 10)
+        emptyFrame.grid(row = 0 , column=1)
                 # Create a frame for the CSV file content
-        csv_frame = tk.Frame(self.window)
-        csv_frame.grid(row=0, column=1, sticky="nsew")
+        csv_frame = tk.Frame(self.window,highlightbackground="grey", highlightthickness=1)
+        csv_frame.grid(row=1, column=2, sticky="nsew")
         csv_frame.config(width=frame_width, height=frame_height)
+         
+                    # Create a frame for the CSV file content
+        loadFrame = tk.Frame(self.window,highlightbackground="grey", highlightthickness=1)
+        loadFrame.grid(row=1, column=3, sticky="nsew", padx=10)
+        loadFrame.config(width=frame_width, height=frame_height)
+          
+         
+        headerName = "Dataset: " + self.genFile
+        textheaderLabel = tk.Label(csv_frame,text = headerName)
+        textheaderLabel.grid(row = 1 , column=0, sticky="nsew")
+        
+        loadHeaderName = "Dataset: "  + self.loadFile
+        loadHeaderLabel = tk.Label(loadFrame, text= loadHeaderName)
+        loadHeaderLabel.grid(row =1, column= 0)
         
         # Create a Text widget for displaying the CSV file content (read-only)
-        csv_widget = tk.Text(csv_frame, wrap=tk.NONE, state=tk.DISABLED)
-        csv_widget.grid(row=0, column=0, sticky="nsew")  # Use grid for the widget
+        csv_widget = tk.Text(csv_frame, wrap=tk.NONE, width = 50 , height= 20)
+        csv_widget.grid(row=2, column=0, sticky="nsew")  # Use grid for the widget
+        
+        # Create a Text widget for displaying the CSV file content (read-only)
+        loadWidget = tk.Text(loadFrame, wrap=tk.NONE, width = 50 , height = 20)
+        loadWidget.grid(row=2, column=0, sticky="nsew")  # Use grid for the widget
         
         # Create a Scrollbar widget for the CSV widget
         csv_scrollbar = tk.Scrollbar(csv_frame, command=csv_widget.yview, orient=tk.VERTICAL)
-        csv_scrollbar.grid(row=0, column=1, sticky="ns")  # Position it to the right
+        csv_scrollbar.grid(row=2, column=1, sticky="ns")  # Position it to the right
         
         # Configure the CSV Text widget to use the scrollbar
         csv_widget.config(yscrollcommand=csv_scrollbar.set)
         
+                # Create a Scrollbar widget for the CSV widget
+        loadScrollBar = tk.Scrollbar(loadFrame, command=csv_widget.yview, orient=tk.VERTICAL)
+        loadScrollBar.grid(row=2, column=1, sticky="ns")  # Position it to the right
+        
+        # Configure the CSV Text widget to use the scrollbar
+        loadWidget.config(yscrollcommand=csv_scrollbar.set)
+        
         try:
-            with open(csv_file, "r", newline="") as f:
+            with open(genFile, "r", newline="") as f:
                 csv_reader = csv.reader(f)
-                with open(csv_file, "r", newline="") as f:
-                    csv_data = f.read()
+                with open(genFile, "r", newline="") as f:
+                    genData = f.read()
                     csv_widget.config(state=tk.NORMAL)
-                    csv_widget.insert(tk.END, csv_data)
-                    csv_widget.config(state=tk.DISABLED)
+                    csv_widget.insert(tk.END, genData)
+                    csv_widget.config()
         except FileNotFoundError:
-            csv_widget.insert(tk.END, "Error: CSV file not found.")
+            csv_widget.insert(tk.END, f"Error: {self.genFile} file not found.")
+            
+        try:
+            with open(loadFile, "r", newline="") as f:
+                csv_reader = csv.reader(f)
+                with open(loadFile, "r", newline="") as f:
+                    loadData = f.read()
+                    loadWidget.config(state=tk.NORMAL)
+                    loadWidget.insert(tk.END, loadData)
+                    loadWidget.config()
+        except FileNotFoundError:
+            loadWidget.insert(tk.END, f"Error: {self.loadFile} file not found.")
+        # this is now for the Load Data set 
+        
         
             # Create buttons under the config widget
         button_frame_text = tk.Frame(text_frame)
-        button_frame_text.grid(row=1, column=0, columnspan=2, sticky="sw")
+        button_frame_text.grid(row=3, column=0, sticky="sw")
 
-        button_width = 8  # Set a fixed width for the buttons
-        button_height = 1  # Set a fixed height for the buttons
-        
+       
         # these are the buttons  
-        changeButtonForConfig = tk.Button(button_frame_text, text="Change", width=button_width, height=button_height, command = lambda: self.ChangeConfig(text_widget))
-        editButtonForConfig = tk.Button(button_frame_text, text="Edit", width=button_width, height=button_height, command = lambda: self.open_text_editor(self.textFile))
-        saveButtonForConfig = tk.Button(button_frame_text, text="Save", width=button_width, height=button_height)
+        changeButtonForConfig = ttk.Button(button_frame_text, text="Change" ,command = lambda: self.ChangeConfig(text_widget))
+        editButtonForConfig = ttk.Button(button_frame_text, text="Edit", command = lambda: self.open_text_editor(self.textFile,text_widget))
+        print("HERE")
+        saveButtonForConfig = ttk.Button(button_frame_text, text="Save", command = lambda: self.save(self.textFile, text_widget,0))
 
         changeButtonForConfig.grid(row=0, column=0, padx=5, pady=5)
         editButtonForConfig.grid(row=0, column=1, padx=5, pady=5)
@@ -198,34 +284,42 @@ class Review:
         
         # Create buttons under the dataset widget aligned to the bottom left
         button_frame_csv = tk.Frame(csv_frame)
-        button_frame_csv.grid(row=1, column=0, sticky="sw")
+        button_frame_csv.grid(row=3, column=0, sticky="sw")
 
-        changeButtonForCsv = tk.Button(button_frame_csv, text="Change", width=button_width, height=button_height, command = lambda: self.ChangeCsv(self.csvFile))
-        editButtonForCsv = tk.Button(button_frame_csv, text="Edit", width=button_width, height=button_height, command = lambda: self.open_csv_editor(self.csvFile))
-        saveButtonForCsv = tk.Button(button_frame_csv, text="Save", width=button_width, height=button_height)
+        loadButtonFrame = tk.Frame(loadFrame)
+        loadButtonFrame.grid(row = 3, column=0, sticky= "sw")
+        
+        changeButtonForCsv = ttk.Button(button_frame_csv, text="Change", command = lambda: self.ChangeCsv(self.genFile,csv_widget))
+        editButtonForCsv = ttk.Button(button_frame_csv, text="Edit",  command = lambda: self.open_csv_editor(self.genFile))
+        saveButtonForCsv = ttk.Button(button_frame_csv, text="Save", command = lambda: self.save(self.genFile,csv_widget,1))
+        
 
+        changeButtonForLoad = ttk.Button(loadButtonFrame, text="Change", command = lambda: self.ChangeCsv(self.loadFile,loadWidget))
+        loadEditButton = ttk.Button(loadButtonFrame, text="Edit",  command = lambda: self.open_csv_editor(self.loadFile))
+        loadSaveButton = ttk.Button(loadButtonFrame, text="Save", command = lambda: self.save(self.loadFile,loadWidget,1))
+        
+        
         changeButtonForCsv.grid(row=0, column=0, padx=5, pady=5, sticky="sw")
         editButtonForCsv.grid(row=0, column=1, padx=5, pady=5, sticky="sw")
         saveButtonForCsv.grid(row=0, column=2, padx=5, pady=5, sticky="sw")
-        
 
+        changeButtonForLoad.grid(row=0, column=0, padx=5, pady=5, sticky="sw")
+        loadEditButton.grid(row=0, column=1, padx=5, pady=5, sticky="sw")
+        loadSaveButton.grid(row=0, column=2, padx=5, pady=5, sticky="sw")
+        
+    
          # Create "Close" button at the bottom left of the window
-        close_button = tk.Button(self.window, text="Close", width=button_width, height=button_height, command = self.CloseWindow)
+        close_button = ttk.Button(self.window, text="Close",command = self.CloseWindow)
         close_button.grid(row=2, column=0, padx=5, pady=5, sticky="sw")
 
         # Create "Confirm" button at the bottom right of the window
-        confirm_button = tk.Button(self.window, text="Confirm", width=button_width, height=button_height, command = self.finish)
-        confirm_button.grid(row= 2, column=1, padx=5, pady=5, sticky="se")
+        confirm_button = ttk.Button(self.window, text="Confirm",command = self.finish)
+        confirm_button.grid(row= 2, column=3, padx=5, pady=5, sticky="se")
       
         # check for updates
-        self.window.after(1000, lambda: self.check_for_changes(text_file,csv_file,text_widget,csv_widget))  # Start checking for changes
+       # self.window.after(1000, lambda: self.check_for_changes(text_file,csv_file,text_widget,csv_widget))  # Start checking for changes
     
-        # Start the tkinter main loop
-        self.window.mainloop()
 
-#demoWindo = ReviewUi("Demo", "config.txt", "loadResampled.csv")
-
-                            
         
 
 

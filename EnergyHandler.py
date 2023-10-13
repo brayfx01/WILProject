@@ -9,8 +9,13 @@ class energyHandler:
         self.checkTanksStatus = None
         self.cells = cells
         self.step = 5 # five minutes
-        self.backlog = Queue() # backlog 
-        self.charge = Queue()# charge queue 
+
+        #these are uesd to record the changes of tank 
+        # and ocntainer 
+        self.containerChange = []
+        self.tankChange = []
+        
+        self.currentTime = 0
     # we will start with these 
     # taking 1 minute each to do a run
     
@@ -19,21 +24,18 @@ class energyHandler:
     def energyManagement(self,energy,tanks,tanksSocStatus):
         self.checkTanksStatus = FullEmpty(tanks) # sets the status of all tanks
         stop = 0
-        print("BEGGINING ALL OF ENERGY MANAGMENT|||||||||||||||||||||||||||||||||||||||||", energy)
-
+        
         while(energy != 0 ):
             if(energy >= 0 ): # Storing Energy
+                # get the best combination 0 is charge case
                 tank = self.bestCombinationTanks(tanks,energy,0)# in this case we are getting the most charged tank
+                # if there are no best tanks set it to all tanks
                 if tank == None:
                     tank = tanks
+                # if they are all full then continue
                 if(tanksSocStatus.checkIfAllFull(tank) == True): # if there is no room to store 
-                    print("THis is energy",energy)
-                    print("all tanks are full so let the rest go")
                     return
-                # get the best tanks to store in 
-                # get the optimal tank
-                # 0 is remainingCapacity, 1 is currentcharged capacity
-          
+             
                  # if there are no combinatinos that work  use them all
                 if tank == None:
                     tank = tanks
@@ -41,26 +43,20 @@ class energyHandler:
                 for section in self.cells:
                     for container in section.containers:
                         containers.append(container) 
-                        
+                # get the best combination of containers
                 bestCombinationContainers = self.bestCombinationContainers(energy,containers)# giving energy
+                #make sure that if no best containers are found then use all
                 if bestCombinationContainers == None:
                     bestCombinationContainers = containers
-               # tank = self.removeUnreacheableTanks(tanks,bestCombinationContainers)
             
                 # apply theh RTE efficecny here to the energy only for storing
                 energy = self.storeEnergy(self.RTE.RTE(energy),tank,containers,tanksSocStatus)
-                # drain any remaining tanks that are on
-                # only drain if we are finished
-                print(tanksSocStatus.checkIfAllFull(tanks) == True)
+                # make sure to drain the tanks
                 if(energy == 0):
-                    print("Draining after exiting sotreEnergy")
+                    # 
                     self.drain(containers,tanks)
-                print("Exist Store ENergy")
-                stop = stop + 1 
-                if(stop  == 3):
-                    print("ERROR",energy)
-                    for tank in tanks:
-                        print(tank.tName)
+                
+             
          # now we are going to deal with negative energy
             
             if(energy < 0): # we need to take energy from the system 
@@ -70,22 +66,14 @@ class energyHandler:
                             print("NOt enough charged energy")
                         }
                     print("all tanks are emtpy an we cannot drain")
-                    for tank in tanks:
-                        print(tank.currentChargedCapacity())
-                    quit()
        
                 # if all tanks are empty put the enrgy in a backlog for potential future use
                 tank = self.findBestCombinationTanks(tanks,energy)
-                for t in tank:
-                    print(t.tName)
-               
                   # can meet the energy requirements use all of them and see what is left after
                 if len(tank) == 0:
                     tank = tanks
-                if(tanksSocStatus.checkIfAllEmpty(tank) == True): # if there is no room to store 
-                    print("all tanks are empty")
-                    self.backlog.put(energy) # put the remaining energy in a backlog
-                    return 
+                if(tanksSocStatus.checkIfAllEmpty(tank) == True): # if there is no room to store
+                    continue
                 # finding the optimal tanks for taking energy from
                 
 
@@ -109,36 +97,15 @@ class energyHandler:
                 if(energy == 0):
                     print("Draining after exiting sotreEnergy")
                     self.drain(containers,tanks)
-                stop = stop +1
-                if(stop == 5):
-                    print("ERROR")
-                    quit()
+              
                 
 
-       
-        for tank in tanks:
-            print(tank.currentChargedCapacity(),tank.tName)
-        print(energy, "Exiting")
-        print("There is a wrong calculation trace and try again")
-        return
+     
                  
-        # now after going through once we see what containres are still on and drain the battery
         
-        
-       #to do 
-       # if all charge of containers used drain and recharge them all 
-       # then work on energy managemetn to store positive energy 
-    def printBacklog(self):
-        if(self.backlog.empty() != True):
-            while self.backlog.empty() != True:
-                print(self.backlog.get())
-        else:
-            print("nothing in backlog")
+
     def storeEnergy(self,energy,tanks,containers, fullEmptyCheck):
-        
-        print(energy,"START //////////////////////////")
-        for tank in tanks:
-            print(tank.tName,tank.soc)
+
             
         # this will drain
         # if all containers have charged for the 5 minuets
@@ -147,7 +114,7 @@ class energyHandler:
                     print("all containers charge 0, energy > 0 we need more containers")
                     for container in containers:
                         print(container.remainingCharge)
-                    quit()
+       
                     self.drain(containers,tanks)# drains all active tanks
                     # sets the remainingCharge back to the original value for the next use
                     for container in containers:

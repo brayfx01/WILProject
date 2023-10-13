@@ -1,25 +1,45 @@
-import tkinter as tk
+import matplotlib.pyplot as plt
+from matplotlib.widgets import Button
+import numpy as np
 
-root = tk.Tk()
-root.title("Nested Frames in a Column Example")
+# Create a figure with a white background
+fig, ax = plt.subplots()
+fig.set_facecolor('white')  # Set the figure background to white
 
-# Create a grid layout with two columns
-root.grid_columnconfigure(0, weight=1)
-root.grid_columnconfigure(1, weight=1)
+# Define the x values for the sine and cosine graphs
+x = np.linspace(0, 2 * np.pi, 100)
 
-# Create the outer frame and place it in the first column
-outer_frame = tk.Frame(root, bg="lightblue", width=400, height=300)
-outer_frame.grid(row=0, column=0, padx=10, pady=10, sticky="nsew")
+# Initialize the line variables for sine and cosine
+sine_line, = ax.plot(x, np.sin(x), label='sin(x)')
+cosine_line, = ax.plot(x, np.cos(x), label='cos(x')
 
-# Create the inner frame and place it inside the outer frame
-inner_frame = tk.Frame(outer_frame, bg="lightgreen", width=200, height=150)
-inner_frame.pack(padx=10, pady=10)
+# Function to update the current tab with the selected graph
+def update_tab(selected_function):
+    if selected_function == 'sine':
+        sine_line.set_visible(True)
+        cosine_line.set_visible(False)
+        ax.set_title('Sine Graph')
+    elif selected_function == 'cosine':
+        sine_line.set_visible(False)
+        cosine_line.set_visible(True)
+        ax.set_title('Cosine Graph')
+    ax.legend()
+    fig.canvas.draw()
 
-# Add labels to both frames for demonstration
-label_outer = tk.Label(outer_frame, text="Outer Frame", bg="lightblue")
-label_outer.pack()
+# Create buttons to switch between tabs
+btn1 = Button(plt.axes([0.1, 0.95, 0.1, 0.05]), 'Sine')
+btn1.on_clicked(lambda event: update_tab('sine'))
 
-label_inner = tk.Label(inner_frame, text="Inner Frame", bg="lightgreen")
-label_inner.pack()
+btn2 = Button(plt.axes([0.25, 0.95, 0.1, 0.05]), 'Cosine')
+btn2.on_clicked(lambda event: update_tab('cosine'))
 
-root.mainloop()
+# Set the background color of the axes to white
+ax.set_facecolor('white')
+
+# Set the background color of the legend to white
+ax.legend().set_frame_on(False)
+
+# Initialize with the sine graph
+update_tab('sine')
+
+plt.show()

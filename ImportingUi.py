@@ -1,10 +1,12 @@
 import tkinter as tk
+from tkinter import ttk
 from ReviewUI import Review
 from tkinter import filedialog
 import os
 
 class Importing:
-    def __init__(self,windowName,rootWindow,windowsArray):
+    def __init__(self,windowName,rootWindow,windowsArray,InitialUi):
+        self.initialUi = InitialUi
         #stop the previous window form operating
         self.windowsArray = windowsArray
         self.window = tk.Toplevel()
@@ -42,7 +44,7 @@ class Importing:
     def next(self, textFileName,csvName):
         #release the grab before creation of new window
         self.window.grab_release()
-        ReviewUi = Review("Review",textFileName,csvName,self.window,self.windowsArray)
+        ReviewUi = Review("Review",textFileName,csvName,self.window,self.windowsArray,self.initialUi)
         ReviewUi.createWindow()
         self.textFileName = ReviewUi.getConfigFile()
         print("after pressing next in importing",self.textFileName)
@@ -83,15 +85,15 @@ class Importing:
         topFrame.pack(fill= tk.BOTH, expand= True)
         
         # now creating the middle frame and text buttons ect 
-        middleFrame = tk.Frame(self.window)
-        
+        middleFrame = tk.Frame(self.window, highlightbackground = "light grey" , highlightthickness=2)
+     
         # dispaly this as default
         textFileLabelOne = tk.Label(middleFrame, text = "FileName: None")
         textFileLabelTwo = tk.Label(middleFrame, text = "FileName: None")
         
-        browsTextButton = tk.Button(middleFrame, text = "Brose Test File:", command =lambda:self.browse_file1(textFileLabelOne))
+        browsTextButton = ttk.Button(middleFrame, text = "Brose Test File:", command =lambda:self.browse_file1(textFileLabelOne))
       
-        browsCsvButton = tk.Button(middleFrame, text = "Brosw CSV FILE:", command= lambda: self.browse_file2(textFileLabelTwo))
+        browsCsvButton = ttk.Button(middleFrame, text = "Brosw CSV FILE:", command= lambda: self.browse_file2(textFileLabelTwo))
         
         browsTextButton.grid(row = 0, column= 0 , padx = 10 , pady = 10 )
         textFileLabelOne.grid(row = 0 , column= 1, padx = 10, pady= 10)
@@ -104,14 +106,12 @@ class Importing:
         
         # close and nect buttons 
         
-        CloseButton = tk.Button(self.window, text = "CLOSE", command= self.CloseWindow)
-        NextButton = tk.Button(self.window, text = "Next", command= lambda: self.next(self.textFileName,self.csvName))
+        CloseButton = ttk.Button(self.window, text = "CLOSE", command= self.CloseWindow)
+        NextButton = ttk.Button(self.window, text = "Next", command= lambda: self.next(self.textFileName,self.csvName))
      
         CloseButton.place(relx= 0.1, rely = 0.9, anchor=tk.W)
         NextButton.place(relx = 0.9 , rely = 0.9, anchor=tk.E)
         
         # Bind the closing event to the custom function
         self.window.protocol("WM_DELETE_WINDOW", self.CloseWindow)
-        # Start the main event loop
-        self.window.mainloop()
-        
+   
