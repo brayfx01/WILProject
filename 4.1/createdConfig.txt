@@ -1,0 +1,11 @@
+Container On Off Efficency: 
+Round Trip Efficency: 
+tank Max Volume: 
+tank Min Volume: 
+Tank Max Soc: 
+Tank Min Soc: 
+container Max Charge: 
+container Min Charge: 
+Tanks:
+Containers:
+END
