@@ -6,17 +6,21 @@ from ReadData import ReadData
 from EnergyHandler import energyHandler
 from FullEmpty import FullEmpty
 from RoundTripEfficency import roundTripEffiency
+import pandas as pd
+
 class systemInitalization():
     def __init__(self, generated,load,configFile):
         self.cells = []
         self.RTE = 0
         self.tanks = []
+        self.configFile = configFile
+        self.generated = pd.read_csv(generated)
+        self.load = pd.read_csv(load)
         # this will initialize the datasets
-        self.data = ReadData()
-        self.data.read(generated,load)
+        ##self.data.read(generated,load)
         self.fullEmpty = None
         
-        self.generatedSurplus = self.data.getGeneratedSurplus()
+        #self.generatedSurplus = self.data.getGeneratedSurplus()
         self.initalizeTanks()
           # this will create the strucutre of the sections and containers
         numSections = self.getSectionCount(configFile)
@@ -27,17 +31,23 @@ class systemInitalization():
             # Now we are going to create the number of containers for each section 
             # we are going to first get the number of containers for this section by calling a function called getContainers
             numberOfContainers = self.getCount("Number of Containers:", sectionName, nextSection) 
-            self.cells.append(Section(sectionName, numberOfContainers, self.getCriticalInfo("Container On Off efficency"),self.tanks))
+            self.cells.append(Section(sectionName, numberOfContainers, self.getCriticalInfo("Container On Off Efficency"),self.tanks))
 
         #now we want to go and get the number of containers in each section
          #this is getting the number of containers in a section
+    def generateSurplus(self):
+        difference = self.generated["Power(MW)"] - self.load["total load actual"]
+        difference = difference.dropna()
+        return difference
+        
+
     def getCount(self,target, sectionName, nextSection):
         # Initialize variables
         sectionFound = False
         containerCount = 0
 
         # Read the text file
-        with open("config2.0.txt", "r") as file:
+        with open(self.configFile, "r") as file:
         # Iterate over the lines in the file
             for line in file:
                 line = line.strip()
@@ -62,7 +72,7 @@ class systemInitalization():
     def getCriticalInfo(self,target):
         # Read the text file
         targetCount = 0
-        with open("config2.0.txt", "r") as file:
+        with open(self.configFile, "r") as file:
         # Iterate over the lines in the file
             for line in file:
                 line = line.strip()
@@ -100,7 +110,7 @@ class systemInitalization():
         tankVolume = 0
         socTank = 0
 
-        with open("config2.0.txt", "r") as file:
+        with open(self.configFile, "r") as file:
         # Iterate over the lines in the file
             line = ""
             for line in file:
@@ -146,7 +156,7 @@ class systemInitalization():
             containerCount = 0
 
             # Read the text file
-            with open("config2.0.txt", "r") as file:
+            with open(self.configFile, "r") as file:
             # Iterate over the lines in the file
                 for line in file:
                     line = line.strip()
@@ -173,7 +183,7 @@ class systemInitalization():
     def getTanks(self):
         return self.tanks
     def getRTE(self):
-        self.efficency = self.getCriticalInfo("Round Trip Effiency")
+        self.efficency = self.getCriticalInfo("Round Trip Efficency")
         self.RTE = roundTripEffiency(self.efficency)
         return self.RTE
     def getFullEmpty(self):

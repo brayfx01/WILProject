@@ -31,7 +31,7 @@ class GetTankData:
             totalChargedVolume += tank.currentChargedCapacity()
         
         currentChargedVolume = totalChargedVolume
-       
+    
         # now calculating the changes enegery does to it and saving it as a percentage of initial volume
         for energy in self.difference:
             if(energy < 0):# subtract the energy
@@ -64,7 +64,12 @@ class GetTankData:
         volume = []
 
         totalSocOverTime = []
-
+        # this is when we stop chargin our tanks
+        target = 0
+        for energy in self.difference:
+            if energy < 0:
+                target += energy
+        target = abs(target)
 
         totalVolume = 0
         # create a temporary array so the original does not get changed
@@ -85,47 +90,62 @@ class GetTankData:
                 # record this change
                 volume.append(totalVolume)
             else: #adding
-                totalVolume = totalVolume + energy
-                # record this change
-                volume.append(totalVolume)
+                if(target > 0):
+                    totalVolume = totalVolume + energy
+                    # record this change
+                    volume.append(totalVolume)
+                    target -= energy
+                else:
+                    volume.append(totalVolume)
 
+        target = 0
+        for energy in self.difference:
+            if energy < 0:
+                target += energy
+        target = abs(target)
 
+        
         # now getting individual Tanks data       
+        # setting all of their initial parametsers 
+        for tank in temporaryTanks:
+             tankRecord.append([tank.tName, tank.currentChargedCapacity(), (tank.currentChargedCapacity()/tank.volume) * 100 ,currentTime])
         for energy in self.difference:
             currentTime += 5
 
             for tank in temporaryTanks:
                 #records this
                 if(tank.currentChargedCapacity() == 0  and energy < 0 or tank.remainingCapacity() == 0  and energy > 0 or energy == 0): 
-                    tankRecord.append([tank.tName, tank.currentChargedCapacity(), tank.soc,currentTime])
+                    tankRecord.append([tank.tName, tank.currentChargedCapacity(), (tank.currentChargedCapacity()/tank.volume) * 100,currentTime])
                 elif(energy < 0):# subtracting case
                     energy = abs(energy)
                     if(tank.currentChargedCapacity() >= energy):
                         tank.drain(energy)
                         # record this drain
-                        tankRecord.append([tank.tName, tank.currentChargedCapacity(), tank.soc,currentTime])
+                        tankRecord.append([tank.tName, tank.currentChargedCapacity(), (tank.currentChargedCapacity()/tank.volume) * 100,currentTime])
                         energy = 0
                     elif(tank.currentChargedCapacity() < energy):
                         energy = energy - tank.currentChargedCapacity()
                 
                         # set this to 0 
                         tank.drain(tank.currentChargedCapacity())
-                        tankRecord.append([tank.tName, tank.currentChargedCapacity(), tank.soc,currentTime])
+                        tankRecord.append([tank.tName, tank.currentChargedCapacity(), (tank.currentChargedCapacity()/tank.volume) * 100,currentTime])
                         
                 elif(energy > 0):# adding case
-                  
-                    if(tank.remainingCapacity() >= energy):
-                        tank.Charge(energy)
-                   
-                        # record this drain
-                        tankRecord.append([tank.tName, tank.currentChargedCapacity(), tank.soc,currentTime])
-                        energy = 0
-                    elif(tank.remainingCapacity() < energy):
-                        energy = energy - tank.remainingCapacity()
-                        # set this to 0 
-                        tank.Charge(tank.remainingCapacity())
-                        tankRecord.append([tank.tName, tank.currentChargedCapacity(), tank.soc,currentTime])
-                        
+                    if(target > 0):
+                        target -= energy
+                        if(tank.remainingCapacity() >= energy):
+                            tank.Charge(energy)
+                    
+                            # record this drain
+                            tankRecord.append([tank.tName, tank.currentChargedCapacity(), (tank.currentChargedCapacity()/tank.volume) * 100,currentTime])
+                            energy = 0
+                        elif(tank.remainingCapacity() < energy):
+                            energy = energy - tank.remainingCapacity()
+                            # set this to 0 
+                            tank.Charge(tank.remainingCapacity())
+                            tankRecord.append([tank.tName, tank.currentChargedCapacity(), (tank.currentChargedCapacity()/tank.volume) * 100,currentTime])
+                    else: # recrod the current data of each tank
+                        tankRecord.append([tank.tName, tank.currentChargedCapacity(), (tank.currentChargedCapacity()/tank.volume) * 100,currentTime])    
 
         return volume, tankRecord, totalSocOverTime
         # now dealing with the SOC and individual Tanks

@@ -9,18 +9,32 @@ from tkinter import filedialog
 
 
 class Graphs:
-    def __init__(self,optimalContainers, optimalTanks,difference,tankData,totalSoc):
+    def __init__(self,optimalContainers, optimalTanks,difference,tankData,totalSoc,individualContainerData, intialUi,finished):
+        self.initialUi = intialUi
         self.data = difference
         self.optimalTanks = optimalTanks
         self.optimalContainers = optimalContainers
+        self.individualContainerData = individualContainerData
         self.tankData = tankData
         self.totalSoc = totalSoc
         self.root = tk.Tk()
         self.root.title("BMS: Results ")
-    def closeWindow(self):
-        self.root.quit()
+        self.finished = finished
+    def closeWindow(self,operation):
+        if(operation == 0):
+            self.finished = False
+            self.root.quit()
+        elif(operation == 1):
+            self.finished = True
+            self.root.quit()
+        else:
+            quit()
+    
+    # Create a function to close the application
+    def close_application(self):
+        quit()
     def expandGraph(self,opearation):
-         expandWindow = ExpandedGraphs(self.data, self.optimalTanks,self.tankData,self.totalSoc,self.tankData,self.optimalContainers,self.optimalContainers)
+         expandWindow = ExpandedGraphs(self.data, self.optimalTanks,self.tankData,self.totalSoc,self.tankData,self.optimalContainers,self.individualContainerData)
          expandWindow.graph(opearation)
     def saveGraphs(self,figure):
         # Save the figure as an image (e.g., PNG)
@@ -40,48 +54,59 @@ class Graphs:
         canvas3_widget = canvas3.get_tk_widget()
         canvas4_widget = canvas4.get_tk_widget()
 
-        canvas1_widget.grid(row=1, column=0)
-        canvas2_widget.grid(row=1, column=1)
-        canvas3_widget.grid(row=3, column=0)
-        canvas4_widget.grid(row=3, column=1)
+        canvas1_widget.grid(row=1, column=0,padx= 10)
+        canvas2_widget.grid(row=1, column=1,padx= 10)
+        canvas3_widget.grid(row=3, column=0,padx= 10)
+        canvas4_widget.grid(row=3, column=1,padx= 10)
         # creating frames to house  buttons
-        figOneButtonFrame = tk.Frame(self.root, bg= "light Grey")
-        figOneButtonFrame.grid(row = 2, column= 0, sticky= "NSEW")
+        figOneButtonFrame = tk.Frame(self.root)
+        figOneButtonFrame.grid(row = 2, column= 0, sticky= "NSEW", padx = 10)
 
-        figTwoButtonFrame = tk.Frame(self.root, bg= "light Grey")
-        figTwoButtonFrame.grid(row = 2, column= 1, sticky= "nsew")
+        figTwoButtonFrame = tk.Frame(self.root)
+        figTwoButtonFrame.grid(row = 2, column= 1, sticky= "nsew", padx = 10)
 
-        figThreeButtonFrame = tk.Frame(self.root, bg= "light Grey")
-        figThreeButtonFrame.grid(row = 4, column= 0, sticky= "nsew")
+        figThreeButtonFrame = tk.Frame(self.root)
+        figThreeButtonFrame.grid(row = 4, column= 0, sticky= "nsew", padx = 10)
 
-        figFourButtonFrame = tk.Frame(self.root, bg= "light Grey")
-        figFourButtonFrame.grid(row = 4, column= 1, sticky= "nsew")
+        figFourButtonFrame = tk.Frame(self.root)
+        figFourButtonFrame.grid(row = 4, column= 1, sticky= "nsew", padx = 10)
 
         # creating the buttons
-        differenceViewButton = ttk.Button(figOneButtonFrame, text = "VIEW", command= lambda: self.expandGraph(0))
-        differenceViewButton.pack(side = "left", anchor="n", padx= 80)
+        differenceViewButton = ttk.Button(figOneButtonFrame, text = "EXPAND", command= lambda: self.expandGraph(0))
+        differenceViewButton.pack(side = "left", anchor="n")
 
         differenceSaveButton = ttk.Button(figOneButtonFrame, text = "SAVE", command=lambda: self.saveGraphs(fig1))
-        differenceSaveButton.pack(side = "right", anchor="n", padx= 65)
+        differenceSaveButton.pack(side = "left", anchor="n",padx= 10)
 
         
-        totalVolumeViewButton = ttk.Button(figTwoButtonFrame, text = "VIEW"  )
-        totalVolumeViewButton.pack(side = "left", anchor="n", padx= 80)
+        totalVolumeViewButton = ttk.Button(figTwoButtonFrame, text = "EXPAND"  , command = lambda: self.expandGraph(1))
+        totalVolumeViewButton.pack(side = "left", anchor="n")
 
         totalSave = ttk.Button(figTwoButtonFrame, text = "SAVE", command=lambda: self.saveGraphs(fig2))
-        totalSave.pack(side = "right", anchor="n", padx= 65)
+        totalSave.pack(side = "left", anchor="n",padx= 10)
       
-        totalContainersViewButton = ttk.Button(figThreeButtonFrame, text = "VIEW")
-        totalContainersViewButton.pack(side = "left", anchor="n", padx= 80)
+        totalContainersViewButton = ttk.Button(figThreeButtonFrame, text = "EXPAND", command = lambda: self.expandGraph(2))
+        totalContainersViewButton.pack(side = "left", anchor="n")
 
         totalContainerSave = ttk.Button(figThreeButtonFrame, text = "SAVE", command=lambda: self.saveGraphs(fig3))
-        totalContainerSave.pack(side = "right", anchor="n", padx= 65)
+        totalContainerSave.pack(side = "left", anchor="n",padx= 10)
      
-        totalSocViewButton = ttk.Button(figFourButtonFrame, text = "VIEW")
-        totalSocViewButton.pack(side = "left", anchor="n", padx= 80)
+        totalSocViewButton = ttk.Button(figFourButtonFrame, text = "EXPAND",  command = lambda: self.expandGraph(3))
+        totalSocViewButton.pack(side = "left", anchor="n")
 
         totalSocViewButton = ttk.Button(figFourButtonFrame, text = "SAVE",  command=lambda: self.saveGraphs(fig4))
-        totalSocViewButton.pack(side = "right", anchor="n", padx= 65)
+        totalSocViewButton.pack(side = "left", anchor="n",padx= 10)
+
+        #continue ,save and back buttons
+        bottomButtonFrame = tk.Frame(self.root)
+        bottomButtonFrame.grid(row = 5, columnspan= 2, sticky= "nsew", padx = 10)
+
+        backButton = ttk.Button(bottomButtonFrame, text = "BACK", command= lambda: self.closeWindow(0))
+        backButton.pack(side = "left", anchor="n",padx= 0,pady= 10)
+
+        saveAndContinue = ttk.Button(bottomButtonFrame, text = "SAVE AND CONTINUE", command=lambda: self.closeWindow(1))
+        saveAndContinue.pack(side = "right", anchor="n",padx= 0,pady= 10)
+
 
 
     def graph(self):
@@ -147,7 +172,7 @@ class Graphs:
         ax1.set_title('Difference')
 
         ax2.set_xlabel('Time(minute)')
-        ax2.set_ylabel('MW')
+        ax2.set_ylabel('Liters')
         ax2.set_title('Total tank Volume Over Time')
 
         ax3.set_xlabel('Time(minute)')
@@ -167,6 +192,14 @@ class Graphs:
         mpldatacursor.datacursor(line4, hover=True, formatter='{x:.2f}, {y:.2f}'.format)
         mpldatacursor.datacursor(differenceLineTwo, hover=True, formatter='{x:.2f}, {y:.2f}'.format)
         """
-        self.root.protocol("WM_DELETE_WINDOW", self.closeWindow)
+       # Bind the close button to the close_application function
+        self.root.protocol("WM_DELETE_WINDOW", self.close_application)
        # Run the Tkinter main loop
         self.root.mainloop()
+        print(self.finished)
+        # return this when we gracefully exit the main loop
+        if(self.root.winfo_exists == True and self.finished == True):
+            self.root.destroy()
+        else:
+            self.root.destroy()
+        return self.finished

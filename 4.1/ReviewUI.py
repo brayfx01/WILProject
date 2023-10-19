@@ -160,7 +160,7 @@ class Review:
         titleFrame = tk.Frame(self.window,highlightbackground="grey")
         titleFrame.grid(row=0 , columnspan= 4, sticky="nsew", pady = 1)
 
-        title = tk.Label(titleFrame, text = "File Review")
+        title = tk.Label(titleFrame, text = "Overview",  font=("Arial", 14))
         title.pack(fill= "both", expand = True)
         # Create a frame for the text file content
         text_frame = tk.Frame(self.window,highlightbackground="grey", highlightthickness=1)
@@ -272,10 +272,10 @@ class Review:
 
        
         # these are the buttons  
-        changeButtonForConfig = ttk.Button(button_frame_text, text="Change" ,command = lambda: self.ChangeConfig(text_widget))
-        editButtonForConfig = ttk.Button(button_frame_text, text="Edit", command = lambda: self.open_text_editor(self.textFile,text_widget))
+        changeButtonForConfig = ttk.Button(button_frame_text, text="CHANGE" ,command = lambda: self.ChangeConfig(text_widget))
+        editButtonForConfig = ttk.Button(button_frame_text, text="EDIT", command = lambda: self.open_text_editor(self.textFile,text_widget))
         print("HERE")
-        saveButtonForConfig = ttk.Button(button_frame_text, text="Save", command = lambda: self.save(self.textFile, text_widget,0))
+        saveButtonForConfig = ttk.Button(button_frame_text, text="SAVE", command = lambda: self.save(self.textFile, text_widget,0))
 
         changeButtonForConfig.grid(row=0, column=0, padx=5, pady=5)
         editButtonForConfig.grid(row=0, column=1, padx=5, pady=5)
@@ -289,14 +289,14 @@ class Review:
         loadButtonFrame = tk.Frame(loadFrame)
         loadButtonFrame.grid(row = 3, column=0, sticky= "sw")
         
-        changeButtonForCsv = ttk.Button(button_frame_csv, text="Change", command = lambda: self.ChangeCsv(self.genFile,csv_widget))
-        editButtonForCsv = ttk.Button(button_frame_csv, text="Edit",  command = lambda: self.open_csv_editor(self.genFile))
-        saveButtonForCsv = ttk.Button(button_frame_csv, text="Save", command = lambda: self.save(self.genFile,csv_widget,1))
+        changeButtonForCsv = ttk.Button(button_frame_csv, text="CHANGE", command = lambda: self.ChangeCsv(self.genFile,csv_widget))
+        editButtonForCsv = ttk.Button(button_frame_csv, text="EDIT",  command = lambda: self.open_csv_editor(self.genFile))
+        saveButtonForCsv = ttk.Button(button_frame_csv, text="SAVE", command = lambda: self.save(self.genFile,csv_widget,1))
         
 
-        changeButtonForLoad = ttk.Button(loadButtonFrame, text="Change", command = lambda: self.ChangeCsv(self.loadFile,loadWidget))
-        loadEditButton = ttk.Button(loadButtonFrame, text="Edit",  command = lambda: self.open_csv_editor(self.loadFile))
-        loadSaveButton = ttk.Button(loadButtonFrame, text="Save", command = lambda: self.save(self.loadFile,loadWidget,1))
+        changeButtonForLoad = ttk.Button(loadButtonFrame, text="CHANGE", command = lambda: self.ChangeCsv(self.loadFile,loadWidget))
+        loadEditButton = ttk.Button(loadButtonFrame, text="EDIT",  command = lambda: self.open_csv_editor(self.loadFile))
+        loadSaveButton = ttk.Button(loadButtonFrame, text="SAVE", command = lambda: self.save(self.loadFile,loadWidget,1))
         
         
         changeButtonForCsv.grid(row=0, column=0, padx=5, pady=5, sticky="sw")
@@ -309,11 +309,11 @@ class Review:
         
     
          # Create "Close" button at the bottom left of the window
-        close_button = ttk.Button(self.window, text="Close",command = self.CloseWindow)
+        close_button = ttk.Button(self.window, text="CLOSE",command = self.CloseWindow)
         close_button.grid(row=2, column=0, padx=5, pady=5, sticky="sw")
 
         # Create "Confirm" button at the bottom right of the window
-        confirm_button = ttk.Button(self.window, text="Confirm",command = self.finish)
+        confirm_button = ttk.Button(self.window, text="CONFIRM",command = self.finish)
         confirm_button.grid(row= 2, column=3, padx=5, pady=5, sticky="se")
       
         # check for updates

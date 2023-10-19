@@ -32,10 +32,7 @@ class InitialUI:
         self.genErrorMessage = None
         self.loadErrorMessage = None
             
-   
-    def finish(self, window):
-        window.destroy()
-        self.window.quit()
+
     def checkEmpty(self,textWidget,generatedWidget,loadWidget,importFrame):
 
         self.errorState = False
@@ -67,7 +64,7 @@ class InitialUI:
             
            
         
-      
+        # empty file name
         if(generatedWidget.get("1.0","end-1c")  == ""):
             
             generatedWidget.config(highlightbackground = "red")
@@ -76,13 +73,13 @@ class InitialUI:
             self.genErrorMessage.grid(row = 2, column= 1)
           
             self.errorState = True
-        elif(os.path.exists(generatedWidget.get("1.0","end-1c"))== False):
+        elif(os.path.exists(generatedWidget.get("1.0","end-1c"))== False): #cannot find file name
             generatedWidget.config(highlightbackground = "red")
              
             self.genErrorMessage.configure(text = "ERROR: FILE NOT FOUND")
             self.genErrorMessage.grid(row = 2, column= 1)
             self.errorState = True
-        else:
+        else:#normal
             generatedWidget.config(highlightbackground = "light grey")
             self.genErrorMessage.grid_remove()
             
@@ -170,6 +167,11 @@ class InitialUI:
         return self.configFile
     def getCsvFile(self):
         return self.csvFile
+    def undo(self,textWidget):
+        textWidget.edit_undo()
+
+    def redo(self,textWidget):
+        textWidget.edit_redo()
     # this is used to pass the final config file back to the main so 
     # that it can be passed as a variable into the system
     def setConfigFile(self, configFile):
@@ -188,7 +190,7 @@ class InitialUI:
         # this will be used in the error handling
         self.textFrame = textFileFrame
         
-        textWidgetname = tk.Label(textFileFrame,text = "Configuration File", bg = "white")
+        textWidgetname = tk.Label(textFileFrame,text = "Configuration File:", bg = "white")
         textWidgetname.grid(row = 0, columnspan= 2, sticky= "w")
        
         # add in the button and the widget
@@ -204,7 +206,7 @@ class InitialUI:
         generatedDataFrame.pack()
         
           
-        genWidgetname = tk.Label(generatedDataFrame,text = "Generated Dataset File", bg = "white")
+        genWidgetname = tk.Label(generatedDataFrame,text = "Generation Dataset File:", bg = "white")
         genWidgetname.grid(row = 0, columnspan= 2, sticky= "w")
        
         #for error handling
@@ -220,7 +222,7 @@ class InitialUI:
         loadDataFrame = tk.Frame(importFrame, bg = "white")
         loadDataFrame.pack()
         # for error handling
-        genWidgetname = tk.Label(loadDataFrame,text = "Load Dataset File", bg = "white")
+        genWidgetname = tk.Label(loadDataFrame,text = "Load Dataset File:", bg = "white")
         genWidgetname.grid(row = 0, columnspan= 2, sticky= "w")
        
         self.loadDataFrame = loadDataFrame
@@ -236,13 +238,29 @@ class InitialUI:
         textFileWidget.insert("1.0", "ConfigExample.txt")
         generatedDatsetWidget.insert("1.0", "GeneratedExample.csv")
         loadDatasetWidget.insert("1.0", "LoadExample.csv")
-        
+
+
+
+        # enabling the ctrl z and y undo an redo functionality  for the widgets
+
+        # Bind Ctrl+Z to undo for text_widget1
+        self.window.bind("<Control-z>", lambda event: self.undo(textFileWidget))
+
+        # Bind Ctrl+Y to redo for text_widget1
+        self.window.bind("<Control-y>", lambda event: self.redo(textFileWidget))
+
+        # Bind Ctrl+Shift+Z to undo for text_widget2
+        self.window.bind("<Control-Shift-Z>", lambda event: self.undo(generatedDatsetWidget))
+
+        # Bind Ctrl+Shift+Y to redo for text_widget2
+        self.window.bind("<Control-Shift-Y>", lambda event: self.redo(generatedDatsetWidget))
+                
         
         return textFileWidget, generatedDatsetWidget, loadDatasetWidget
 
     def createWindow(self):
         # Create the main window
-     
+       
         self.window.title("Battery Management System")
 
         # Calculate the center of the screen
@@ -260,7 +278,7 @@ class InitialUI:
         outlineFrame =tk.Frame(self.window,  width=200, height=100, highlightbackground="grey", highlightthickness=2)
         outlineFrame.pack(expand=True)
         
-        Title = tk.Label(outlineFrame, text="BMS: IMPORTING", bg ="white")
+        Title = tk.Label(outlineFrame, text="BMS: IMPORTING", bg ="white", font=("Arial", 10))
         Title.pack(fill= "both", expand=True)
         
         importingFrame = tk.Frame(outlineFrame, width= 10, height=100, bg= "white")

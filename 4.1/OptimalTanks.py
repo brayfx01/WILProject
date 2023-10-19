@@ -28,7 +28,6 @@ class OptimalTanks():
         self.met = False
         
     def optimalTanks(self):
-        dummy = 0
         # used to determine the Name of the tank
         tankCount = 0
         # this is needed as for the positive energy we 
@@ -95,9 +94,7 @@ class OptimalTanks():
                                 tank.Charge(abs(energy))
                                 self.energy = 0
                                 
-                                # recording changes 
-                                self.tankChangeRecord.append([tank.currentChargeCapacity(), tank.soc, self.currentTime])
-                                self.currentTime += 5
+                            
                                 break
                             else:# Tank cannot meet energy demands 
                                 # we need to add more
@@ -118,8 +115,6 @@ class OptimalTanks():
                               
                                 self.targetStorage = self.targetStorage - newTank.remainingCapacity()
                                 
-                                # recording changes 
-                                self.tankChangeRecord.append([tank.currentChargeCapacity(), tank.soc, self.currentTime])
                                 continue
                         else:# if this tank is empty pass it
                             continue
@@ -132,9 +127,7 @@ class OptimalTanks():
                           
                             self.energy = 0
                              # recording changes 
-                                                            # recording changes 
-                            self.tankChangeRecord.append([tank.currentChargedCapacity(), tank.soc, self.currentTime])
-                            self.currentTime += 5
+                        
                             break
                         # this tank cannot fully hanle energy requirements so use what it has
                         elif(tank.currentChargedCapacity() > 0 and tank.currentChargedCapacity() < abs(energy)):
@@ -151,6 +144,7 @@ class OptimalTanks():
                 # this is only for checking if the initial tanks 
                 # can hold the energy
                 
+                #just checking our created tank if it can store
                 if self.energy != 0 and self.energy < 0:
                     for tank in self.tankArray:
                         if(tank.remainingCapacity() == 0):
@@ -169,8 +163,8 @@ class OptimalTanks():
                             else:
                                 self.energy = self.energy +  tank.remainingCapacity()
                                 # set this tank to full
-                                tank.soc = 100
-                                tank.chargedCapacity = self.maxVolume
+                                tank.Charge(tank.remainingCapacity())
+                                
                             
                                 # recording changes 
                                 self.tankChangeRecord.append([tank.currentChargedCapacity(), tank.soc, self.currentTime])
@@ -252,10 +246,7 @@ class OptimalTanks():
 
                             self.energy = 0
                        
-                            # recording this 
-                            self.tankChangeRecord.append([self.maxVolume, 0, self.currentTime])
-                            self.currentTime += 5
-                            
+                    
                         elif(self.energy < self.maxVolume *self.minSoc):
                             
                             tankCount = tankCount +1
@@ -355,9 +346,6 @@ class OptimalTanks():
             elif(energy > 0 and self.met == True):
                 self.tankChangeRecord.append([tank.currentChargedCapacity(), tank.soc,self.currentTime])
                 self.currentTime +=5
-        for tank in self.tankArray:
-            if tank.currentChargedCapacity() < 0:
-                print("this one")
-                quit()
+   
         return self.tankArray, self.tankChangeRecord
 
