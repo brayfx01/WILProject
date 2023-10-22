@@ -1,0 +1,39 @@
+Container On Off efficency = 100
+RoundTripEffiency = 85
+Section 1: 
+Container 1: 
+Container 2:
+Container 3:
+
+Tank 1: 
+Volume = 1000
+SOC = 10
+
+Tank 2: 
+Volume = 1000
+SOC = 10
+
+Tank 3:
+Volume = 2000
+SOC = 20
+
+Section 2: 
+Container 1: 
+
+Tank 1: 
+Volume = 1000
+SOC = 10
+
+Section 3: 
+Container 1: 
+Tank 1:
+Volume = 2000
+SOC = 50
+
+Section 4:
+COntainer 1:
+Tank 1: 
+Volume = 2000
+SOC = 50
+
+END
