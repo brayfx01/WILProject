@@ -1,0 +1,38 @@
+Container On Off Efficency = 10 (5 MIN)
+Round Trip Efficency = 100 (Percentage)
+
+Tank Max Volume =  100000 (Litres)
+Tank Min Volume =  100000 (Litres)
+
+Tank Max SOC =  100 (percentage)
+Tank Min SOC =  0 (percentage)
+
+Container Max Charge = 100000 (MW)
+Container Min Charge =  100000 (MW)
+
+Generated Column Name:  Power(MW)
+Load Column Name:   total load actual
+
+END
+Tanks:   
+    Tank: 1
+        Volume = 100000
+            SOC = 100.0
+    Tank: 2
+        Volume = 100000
+            SOC = 100.0
+    Tank: 3
+        Volume = 100000
+            SOC = 10.664
+
+
+Containers:
+    Container: 1
+        Charge = 100000
+        Corresponding Tanks = [Tank: 1, Tank: 2]
+    Container: 2
+        Charge = 100000
+        Corresponding Tanks = [Tank: 2, Tank: 3, Tank: 1]
+    Container: 3
+        Charge = 9154.0
+        Corresponding Tanks = [Tank: 3, Tank: 1]
